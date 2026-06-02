@@ -1,0 +1,99 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--fg);
+    transition: background 0.15s, color 0.15s;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body.light {
+    --bg: #fff;
+    --fg: #111;
+    --border: #5f5f5f;
+    --border-hover: #ccc;
+    --btn-hover: #f5f5f5;
+    --btn-active: #ebebeb;
+    --muted: #999;
+}
+
+body.dark {
+    --bg: #111;
+    --fg: #f0f0f0;
+    --border: #ccc;
+    --border-hover: #444;
+    --btn-hover: #1a1a1a;
+    --btn-active: #222;
+    --muted: #ccc;
+}
+
+.page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 3rem 2.5rem;
+    border: 1px solid var(--border);
+    text-align: center;
+    min-width: 300px;
+}
+
+.card_label {
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.card_heading {
+    font-size: 64px;
+    font-weight: 500;
+    color: var(--fg);
+    line-height: 1;
+    min-width: 3ch;
+}
+
+.btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+.btn {
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn:hover {
+    background: var(--btn-hover);
+    border-color: var(--border-hover);
+}
+
+.btn:active {
+    background: var(--btn-active);
+    transform: scale(0.97);
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+}
