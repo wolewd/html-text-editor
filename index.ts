@@ -57,7 +57,7 @@ if (args.includes("--plugin")) {
   const result = await Bun.build({
     entrypoints: ["src/plugin.ts"],
     outdir: "./dist",
-    naming: "[dir]/wysiwyg-editor.[ext]",
+    naming: "[dir]/wysiwyg-editor.min.[ext]",
     minify: true,
     target: "browser",
     format: "iife",
@@ -69,12 +69,12 @@ if (args.includes("--plugin")) {
   }
 
   // Inject CSS into the JS bundle (JSON-escaped)
-  const jsPath = "dist/wysiwyg-editor.js";
+  const jsPath = "dist/wysiwyg-editor.min.js";
   let js = readFileSync(jsPath, "utf-8");
   js = js.replace('"__CSS_INLINE__"', JSON.stringify(cssContent));
   writeFileSync(jsPath, js);
 
-  console.log("[plugin] built → dist/wysiwyg-editor.js (CSS inlined)");
+  console.log("[plugin] built → dist/wysiwyg-editor.min.js (CSS inlined)");
   process.exit(0);
 }
 
