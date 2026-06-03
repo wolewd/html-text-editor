@@ -84,7 +84,7 @@ export class CodePreview extends WolComponent {
         </div>
         <iframe
           class="w-full flex-1 border-0"
-          sandbox="allow-same-origin"
+          sandbox="allow-same-origin allow-scripts"
           title="HTML Preview"
         ></iframe>
       </div>

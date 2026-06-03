@@ -23,6 +23,9 @@ const ICONS: Record<string, string> = {
   link:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
   image:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
   video:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
+  copy:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
+  check:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  download:      `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
 };
 
 @define("tool-bar")
@@ -43,6 +46,20 @@ export class ToolBar extends WolComponent {
   private _sync() {
     if (this._undoBtn) this._undoBtn.disabled = !canUndo();
     if (this._redoBtn) this._redoBtn.disabled = !canRedo();
+  }
+
+  private _download() {
+    const html = getEditor()?.value ?? "";
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const name = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}.html`;
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   private _build() {
@@ -164,6 +181,15 @@ export class ToolBar extends WolComponent {
     row.appendChild(mkBtn("link", "Link",             () => { saveHistory(getEditor()?.value ?? ""); insertLink(); }));
     row.appendChild(mkBtn("image", "Image",           () => { saveHistory(getEditor()?.value ?? ""); insertImage(); }));
     row.appendChild(mkBtn("video", "Video",           () => { saveHistory(getEditor()?.value ?? ""); insertVideo(); }));
+    row.appendChild(sep());
+    row.appendChild(mkBtn("copy", "Copy HTML",         () => { 
+      navigator.clipboard.writeText(getEditor()?.value ?? "");
+      const btn = row.lastElementChild as HTMLButtonElement;
+      const orig = btn.innerHTML;
+      btn.innerHTML = ICONS.check!;
+      setTimeout(() => { btn.innerHTML = orig; }, 1500);
+    }));
+    row.appendChild(mkBtn("download", "Download HTML", () => { this._download(); }));
 
     // ── Spacer ────────────────────────────────────────────────────────────
     const spacer = document.createElement("div");
