@@ -76,6 +76,38 @@ function removeFormat(range: Range, tag: string) {
     sel?.removeAllRanges();
     sel?.addRange(nr);
   }
+
+  document.dispatchEvent(new Event("selectionchange"));
+}
+
+function convertAllBlocks(root: HTMLElement, range: Range, tag: string) {
+  let sNode: Node | null = range.startContainer;
+  while (sNode && sNode !== root && !(sNode.nodeType === Node.ELEMENT_NODE && (sNode as HTMLElement).matches(BLOCK_SEL))) {
+    sNode = sNode.parentNode;
+  }
+  let eNode: Node | null = range.endContainer;
+  while (eNode && eNode !== root && !(eNode.nodeType === Node.ELEMENT_NODE && (eNode as HTMLElement).matches(BLOCK_SEL))) {
+    eNode = eNode.parentNode;
+  }
+  if (!sNode || !eNode || sNode === root || eNode === root) return;
+
+  let cur: Node | null = sNode;
+  while (cur) {
+    const next = cur.nextSibling;
+    if (cur.nodeType === Node.ELEMENT_NODE && (cur as HTMLElement).matches(BLOCK_SEL)) {
+      const el  = cur as HTMLElement;
+      if (el.tagName.toLowerCase() !== tag) {
+        const rep = document.createElement(tag);
+        while (el.firstChild) rep.appendChild(el.firstChild);
+        el.replaceWith(rep);
+        if (cur === sNode) sNode = rep;
+        if (cur === eNode) eNode = rep;
+        cur = rep;
+      }
+    }
+    if (cur === eNode) break;
+    cur = next;
+  }
 }
 
 export function isFormatActive(cmd: string): boolean {
@@ -118,7 +150,7 @@ export function applyBlock(
     convertAllBlocks(editor, range, tag);
     editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
     restoreSelection(savedSel, savedRange);
-    editor.focus();
+    document.dispatchEvent(new Event("selectionchange"));
     _busy = false;
     return;
   }
