@@ -54,17 +54,45 @@ export function wrapBlock(tag: string): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Wrap selected lines in a list (<ul> or <ol>) */
+/** Wrap selected lines in a list (<ul> or <ol>).
+ * If cursor is already inside a list item, appends a new <li> instead. */
 export function wrapList(tag: "ul" | "ol"): void {
   const ta = getEditor();
   if (!ta) return;
   ta.focus();
 
-  const start = ta.selectionStart;
-  const end = ta.selectionEnd;
+  const pos = ta.selectionStart;
   const text = ta.value;
 
-  // Find line boundaries
+  // ── Check if we're inside an existing <li> ────────────────────────────
+  const before = text.substring(0, pos);
+  const after = text.substring(pos);
+
+  // Find the last <li> before cursor that hasn't been closed yet
+  const liOpen = lastIndexOfUnclosed(before, "<li>", "</li>");
+  if (liOpen !== -1) {
+    // Check if this <li> is inside a <ul> or <ol>
+    const beforeLi = before.substring(0, liOpen);
+    const listOpen = lastIndexOfUnclosed(beforeLi, "<ul>", "</ul>") !== -1 ||
+                     lastIndexOfUnclosed(beforeLi, "<ol>", "</ol>") !== -1;
+    if (listOpen) {
+      // We're inside a list item — find its closing </li> and append a new one
+      const liClose = after.indexOf("</li>");
+      const insertPos = liClose === -1 ? pos + after.length : pos + liClose + 5;
+      const indent = "  ";
+      const newLi = `\n${indent}<li></li>`;
+      ta.setRangeText(newLi, insertPos, insertPos, "end");
+      const cursor = insertPos + indent.length + 5; // after \n  <li>
+      ta.selectionStart = cursor;
+      ta.selectionEnd = cursor;
+      ta.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
+  }
+
+  // ── Not inside a list — original wrap behavior ───────────────────────
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
   const lineStart = text.lastIndexOf("\n", start - 1) + 1;
   const lineEndIdx = text.indexOf("\n", end);
   const actualEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
@@ -73,22 +101,41 @@ export function wrapList(tag: "ul" | "ol"): void {
   const lines = selected.split("\n").filter((l) => l.trim() !== "");
 
   if (lines.length === 0) {
-    // No content — insert empty list template
     const tpl = `<${tag}>\n  <li></li>\n</${tag}>`;
     ta.setRangeText(tpl, start, end, "end");
-    const cursor = lineStart + tag.length + 9; // after <tag>\n  <li>
+    const cursor = lineStart + tag.length + 9;
     ta.selectionStart = cursor;
     ta.selectionEnd = cursor;
   } else {
     const items = lines.map((l) => `  <li>${l}</li>`).join("\n");
     const wrapped = `<${tag}>\n${items}\n</${tag}>`;
     ta.setRangeText(wrapped, lineStart, actualEnd, "end");
-    // Place cursor inside the first <li>
-    const cursor = lineStart + tag.length + 9; // after <tag>\n  <li>
+    const cursor = lineStart + tag.length + 9;
     ta.selectionStart = cursor;
     ta.selectionEnd = cursor;
   }
   ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Find the last occurrence of `open` before the string end that hasn't been closed by `close` */
+function lastIndexOfUnclosed(haystack: string, open: string, close: string): number {
+  let depth = 0;
+  let i = haystack.length;
+  while (i >= 0) {
+    const closeIdx = haystack.lastIndexOf(close, i);
+    const openIdx = haystack.lastIndexOf(open, i);
+    if (closeIdx > openIdx) {
+      depth++;
+      i = closeIdx - 1;
+    } else if (openIdx !== -1) {
+      if (depth === 0) return openIdx;
+      depth--;
+      i = openIdx - 1;
+    } else {
+      break;
+    }
+  }
+  return -1;
 }
 
 /** Insert a horizontal rule on its own line at the cursor */
