@@ -2,12 +2,26 @@ import { WolComponent, html, define } from "wolfe";
 import { editorStore } from "../stores/editorStore.ts";
 import type { EditorState } from "../stores/editorStore.ts";
 
-function wrapHtml(source: string): string {
+let _cachedCSS = "";
+
+async function getAppCSS(): Promise<string> {
+  if (_cachedCSS) return _cachedCSS;
+  try {
+    const res = await fetch("/app.css");
+    _cachedCSS = await res.text();
+  } catch {
+    _cachedCSS = "";
+  }
+  return _cachedCSS;
+}
+
+function wrapHtml(source: string, css: string): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>${css}</style>
 </head>
-<body>${source}</body>
+<body class="prose max-w-2xl mx-auto my-8 px-6 bg-white">${source}</body>
 </html>`;
 }
 
@@ -31,12 +45,12 @@ export class CodePreview extends WolComponent {
     return () => { this._unsub?.(); };
   }
 
-  private _writeIframe() {
+  private async _writeIframe() {
     const iframe = this.find<HTMLIFrameElement>("iframe");
-    if (!iframe || !iframe.contentDocument) return;
-    iframe.contentDocument.open();
-    iframe.contentDocument.write(wrapHtml(this._state.html));
-    iframe.contentDocument.close();
+    if (!iframe) return;
+
+    const css = await getAppCSS();
+    iframe.srcdoc = wrapHtml(this._state.html, css);
   }
 
   protected render() {
