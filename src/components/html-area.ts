@@ -1,6 +1,7 @@
 import { WolComponent, html, define } from "wolfe";
 import { editorStore } from "../stores/editorStore.ts";
 import type { EditorState } from "../stores/editorStore.ts";
+import { preprocess } from "../lib/preprocess.ts";
 
 @define("html-area")
 export class HtmlArea extends WolComponent {
@@ -27,7 +28,7 @@ export class HtmlArea extends WolComponent {
         <div class="flex items-center justify-between px-3 py-2 border-b border-stone-200 dark:border-stone-800 flex-shrink-0">
           <span class="text-[10px] font-mono text-stone-500 dark:text-stone-400 font-medium tracking-widest uppercase">HTML Output</span>
         </div>
-        <pre class="flex-1 overflow-auto text-xs text-green-400 font-mono p-3 whitespace-pre-wrap break-all leading-relaxed">${s.html}</pre>
+        <pre class="flex-1 overflow-auto text-xs text-green-400 font-mono p-3 whitespace-pre-wrap break-all leading-relaxed">${preprocess(s.html)}</pre>
       </div>
     `;
   }
