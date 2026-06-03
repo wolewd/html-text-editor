@@ -1,7 +1,7 @@
 import { WolComponent, html, define } from "wolfe";
 import { editorStore } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo } from "../lib/history.ts";
-import { format, isFormatActive } from "../lib/format.ts";
+import { format, isFormatActive, applyBlock, currentBlockTag } from "../lib/format.ts";
 
 const icons: Record<string, string> = {
   bold: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -60,6 +60,47 @@ export class ToolBar extends WolComponent {
     add("italic", "Italic (Ctrl+I)", () => { saveHistory(); format("italic"); this._updateActiveStates(); }, "italic");
     add("underline", "Underline (Ctrl+U)", () => { saveHistory(); format("underline"); this._updateActiveStates(); }, "underline");
     add("strikethrough", "Strikethrough (Ctrl+Shift+X)", () => { saveHistory(); format("strikethrough"); this._updateActiveStates(); }, "strikethrough");
+
+    // Block-level selector (paragraph / headings)
+    const blockSel = document.createElement("select");
+    blockSel.title = "Block type";
+    blockSel.className = "h-7 px-1 text-xs rounded border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 cursor-pointer font-mono";
+    [
+      ["p", "paragraph"],
+      ["h1", "heading 1"],
+      ["h2", "heading 2"],
+      ["h3", "heading 3"],
+      ["h4", "heading 4"],
+      ["h5", "heading 5"],
+      ["h6", "heading 6"],
+    ].forEach(([v, label]) => {
+      const o = document.createElement("option");
+      o.value = v!;
+      o.textContent = label!;
+      blockSel.appendChild(o);
+    });
+    let savedRange: Range | null = null;
+    let savedSel: { sn: Node; so: number; en: Node; eo: number } | null = null;
+    blockSel.addEventListener("mousedown", () => {
+      const s = window.getSelection();
+      if (s && s.rangeCount) {
+        savedRange = s.getRangeAt(0).cloneRange();
+        const r = s.getRangeAt(0);
+        savedSel = { sn: r.startContainer, so: r.startOffset, en: r.endContainer, eo: r.endOffset };
+      }
+    });
+    blockSel.addEventListener("change", () => {
+      saveHistory();
+      applyBlock(blockSel.value, savedRange ?? undefined, savedSel ?? undefined);
+      savedRange = null;
+      savedSel = null;
+    });
+    // Update the select to reflect the current block
+    const syncBlock = () => {
+      blockSel.value = currentBlockTag();
+    };
+    document.addEventListener("selectionchange", syncBlock);
+    t.appendChild(blockSel);
 
     // Spacer
     const spacer = document.createElement("div");

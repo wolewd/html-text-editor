@@ -2,7 +2,7 @@ import { WolComponent, html, define } from "wolfe";
 import { editorStore, updateStats, saveHtml } from "../stores/editorStore.ts";
 import type { EditorState } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo } from "../lib/history.ts";
-import { format } from "../lib/format.ts";
+import { format, isApplyingBlock } from "../lib/format.ts";
 
 @define("write-area")
 export class WriteArea extends WolComponent {
@@ -28,11 +28,20 @@ export class WriteArea extends WolComponent {
 
     this.editorEl.addEventListener("input", (e) => {
       if (!this.editorEl) return;
+
+      // Normalize <div> blocks back to <p> — browser defaults to div after headings
+      const divs = Array.from(this.editorEl.querySelectorAll(":scope > div"));
+      for (const div of divs) {
+        const p = document.createElement("p");
+        while (div.firstChild) p.appendChild(div.firstChild);
+        div.replaceWith(p);
+      }
+
       if (e.isTrusted) saveHistory();
 
       // Re-wrap bare <br> or empty editor — browser drops <p> when user deletes all content
       const html = this.editorEl.innerHTML;
-      if (html === "<br>" || html === "") {
+      if (!isApplyingBlock() && (html === "<br>" || html === "")) {
         this.editorEl.innerHTML = "<p><br></p>";
       }
 
@@ -42,6 +51,30 @@ export class WriteArea extends WolComponent {
 
     this.editorEl.addEventListener("keydown", (e) => {
       const ev = e as KeyboardEvent;
+
+      // Enter inside a heading: create another heading of the same type
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount) {
+          let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
+          while (node && node.nodeType !== Node.ELEMENT_NODE) node = node.parentNode;
+          const h = (node as HTMLElement)?.closest?.("h1, h2, h3, h4, h5, h6");
+          if (h) {
+            ev.preventDefault();
+            const tag = h.tagName.toLowerCase();
+            const next = document.createElement(tag);
+            next.innerHTML = "<br>";
+            h.after(next);
+            const nr = document.createRange();
+            nr.selectNodeContents(next);
+            nr.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(nr);
+            return;
+          }
+        }
+      }
+
       const ctrl = ev.ctrlKey || ev.metaKey;
       if (ctrl && !ev.shiftKey) {
         switch (ev.key) {
