@@ -15,13 +15,13 @@ async function getAppCSS(): Promise<string> {
   return _cachedCSS;
 }
 
-function wrapHtml(source: string, css: string): string {
+function wrapHtml(source: string, css: string, dark: boolean): string {
   return `<!DOCTYPE html>
-<html>
+<html${dark ? ' class="dark"' : ''}>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>${css}</style>
 </head>
-<body class="prose max-w-2xl mx-auto my-8 px-6 bg-white">${source}</body>
+<body class="prose max-w-2xl mx-auto my-8 px-6 bg-white dark:bg-stone-900">${source}</body>
 </html>`;
 }
 
@@ -50,13 +50,14 @@ export class CodePreview extends WolComponent {
     if (!iframe) return;
 
     const css = await getAppCSS();
-    iframe.srcdoc = wrapHtml(this._state.html, css);
+    const dark = document.documentElement.classList.contains("dark");
+    iframe.srcdoc = wrapHtml(this._state.html, css, dark);
   }
 
   protected render() {
     return html`
       <iframe
-        class="w-full h-full border-0 bg-white"
+        class="w-full h-full border-0 bg-white dark:bg-stone-900"
         sandbox="allow-scripts"
         title="HTML Preview"
       ></iframe>

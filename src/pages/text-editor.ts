@@ -30,13 +30,13 @@ export class TextEditor extends WolComponent {
             <code-editor class="block w-full h-full"></code-editor>
           </div>
           <div hidden=${!show}
-            class="w-lg max-w-full dark:border-stone-800 shadow-lg flex flex-col bg-white shrink-0"
+            class="w-lg max-w-full border-l border-stone-200 dark:border-stone-800 shadow-lg flex flex-col bg-white dark:bg-stone-900 shrink-0"
           >
-            <div class="flex items-center justify-between px-4 h-10 border-b border-stone-200 bg-stone-50 shrink-0">
+            <div class="flex items-center justify-between px-4 h-10 border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800 shrink-0">
               <span class="text-[10px] font-mono text-stone-400 tracking-widest uppercase">Preview</span>
               <button
                 @mousedown=${(e: Event) => { e.preventDefault(); togglePreview(); }}
-                class="p-1 rounded text-stone-400 hover:text-stone-600 hover:bg-stone-100 cursor-pointer"
+                class="p-1 rounded text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 cursor-pointer"
                 title="Close preview"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

@@ -125,7 +125,7 @@ export class CodeEditor extends WolComponent {
       <textarea
         id="wol-code-editor"
         spellcheck="false"
-        class="w-full h-full resize-none bg-white text-stone-700 font-mono text-sm leading-relaxed p-6 border-0 border-r border-stone-200 dark:border-stone-800 outline-none selection:bg-stone-200"
+        class="w-full h-full resize-none bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 font-mono text-sm leading-relaxed p-6 border-0 border-r border-stone-200 dark:border-stone-800 outline-none selection:bg-stone-200 dark:selection:bg-stone-700"
         placeholder="<p>Start writing HTML...</p>"
       ></textarea>
       </div>

@@ -1,7 +1,24 @@
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 @source "./**/*.ts";
 @source "../public/**/*.html";
+
+body {
+  background-color: var(--color-stone-50);
+  color: var(--color-stone-900);
+}
+.dark body {
+  background-color: var(--color-stone-950);
+  color: var(--color-stone-200);
+}
+
+::placeholder {
+  color: var(--color-stone-400);
+}
+.dark ::placeholder {
+  color: var(--color-stone-500);
+}
 
 @layer components {
   .prose {
@@ -151,6 +168,34 @@
     & video {
       max-width: 100%;
       border-radius: 0.25rem;
+    }
+
+    .dark & {
+      color: var(--color-stone-300);
+    }
+    .dark & h6 {
+      color: var(--color-stone-400);
+    }
+    .dark & hr {
+      border-top-color: var(--color-stone-700);
+    }
+    .dark & td,
+    .dark & th {
+      border-color: var(--color-stone-700);
+    }
+    .dark & th {
+      background: var(--color-stone-800);
+    }
+    .dark & pre {
+      background: var(--color-stone-800);
+      border-color: var(--color-stone-700);
+    }
+    .dark & blockquote {
+      border-left-color: var(--color-stone-700);
+      color: var(--color-stone-400);
+    }
+    .dark & a {
+      color: var(--color-blue-400);
     }
   }
 }
