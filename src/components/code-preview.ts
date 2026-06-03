@@ -2,29 +2,6 @@ import { WolComponent, html, define } from "wolfe";
 import { editorStore } from "../stores/editorStore.ts";
 import type { EditorState } from "../stores/editorStore.ts";
 
-let _cachedCSS = "";
-
-async function getAppCSS(): Promise<string> {
-  if (_cachedCSS) return _cachedCSS;
-  try {
-    const res = await fetch("/app.css");
-    _cachedCSS = await res.text();
-  } catch {
-    _cachedCSS = "";
-  }
-  return _cachedCSS;
-}
-
-function wrapHtml(source: string, css: string, dark: boolean): string {
-  return `<!DOCTYPE html>
-<html${dark ? ' class="dark"' : ''}>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>${css}</style>
-</head>
-<body class="prose max-w-2xl mx-auto my-8 px-6 bg-white dark:bg-stone-900">${source}</body>
-</html>`;
-}
-
 @define("code-preview")
 export class CodePreview extends WolComponent {
   private _state: EditorState;
@@ -39,28 +16,21 @@ export class CodePreview extends WolComponent {
     this._unsub = editorStore.subscribe((s) => {
       this._state = s;
       this.update();
-      requestAnimationFrame(() => this._writeIframe());
     });
-    requestAnimationFrame(() => this._writeIframe());
     return () => { this._unsub?.(); };
   }
 
-  private async _writeIframe() {
-    const iframe = this.find<HTMLIFrameElement>("iframe");
-    if (!iframe) return;
-
-    const css = await getAppCSS();
-    const dark = document.documentElement.classList.contains("dark");
-    iframe.srcdoc = wrapHtml(this._state.html, css, dark);
+  protected override onUpdate() {
+    const el = this.find<HTMLDivElement>("#preview-output");
+    if (el) el.innerHTML = this._state.html;
   }
 
   protected render() {
     return html`
-      <iframe
-        class="w-full h-full border-0 bg-white dark:bg-stone-900"
-        sandbox="allow-scripts"
-        title="HTML Preview"
-      ></iframe>
+      <div
+        id="preview-output"
+        class="prose max-w-2xl mx-auto my-8 px-6 bg-white dark:bg-stone-900 h-full overflow-auto"
+      ></div>
     `;
   }
 }
