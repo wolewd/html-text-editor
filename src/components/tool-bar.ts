@@ -1,7 +1,6 @@
 import { WolComponent, html, define } from "wolfe";
-import { toggleShowHtml } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo, canUndo, canRedo } from "../lib/history.ts";
-import { format, isFormatActive, applyBlock, currentBlockTag } from "../lib/format.ts";
+import { insertInline, wrapBlock, wrapList, getEditor } from "../lib/tag-insert.ts";
 
 const ICONS: Record<string, string> = {
   bold:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -10,59 +9,26 @@ const ICONS: Record<string, string> = {
   strikethrough: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.3 4.9c-2.3-.6-4.4-1-6.2-.9-2.7 0-5.3.7-5.3 3.6 0 1.5 1.8 3.3 6.4 3.9h.1m6.9 3.7c.3.4.4.8.4 1.3 0 2.9-2.7 3.6-6.3 3.6-2.6 0-5.1-.6-6.8-1.3"/><line x1="4" y1="11.9" x2="20" y2="11.9"/></svg>`,
   undo:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>`,
   redo:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>`,
-  code:          `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+  ul:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>`,
+  ol:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="3" y="9" font-size="8" fill="currentColor" stroke="none">1</text><text x="3" y="15" font-size="8" fill="currentColor" stroke="none">2</text><text x="3" y="21" font-size="8" fill="currentColor" stroke="none">3</text></svg>`,
 };
-
-const BLOCKS = [
-  ["p",  "Paragraph"],
-  ["h1", "Heading 1"],
-  ["h2", "Heading 2"],
-  ["h3", "Heading 3"],
-  ["h4", "Heading 4"],
-  ["h5", "Heading 5"],
-  ["h6", "Heading 6"],
-] as const;
 
 @define("tool-bar")
 export class ToolBar extends WolComponent {
-  // Direct DOM refs — toolbar is imperative-only, never re-rendered
-  private _blockSel: HTMLSelectElement | null = null;
-  private _fmtBtns  = new Map<string, HTMLButtonElement>();
-  private _undoBtn:  HTMLButtonElement | null = null;
-  private _redoBtn:  HTMLButtonElement | null = null;
+  private _undoBtn: HTMLButtonElement | null = null;
+  private _redoBtn: HTMLButtonElement | null = null;
 
   protected override onMount() {
     this._build();
-    this._sync();
 
-    const sync = () => this._sync();
-    document.addEventListener("selectionchange",     sync);
-    document.addEventListener("wolfe:format-change", sync);
-    document.addEventListener("wolfe:block-applied", sync);
-
-    return () => {
-      document.removeEventListener("selectionchange",     sync);
-      document.removeEventListener("wolfe:format-change", sync);
-      document.removeEventListener("wolfe:block-applied", sync);
-    };
+    // Periodically sync undo/redo button states
+    const timer = setInterval(() => this._sync(), 200);
+    return () => clearInterval(timer);
   }
 
-  // Toolbar is pure imperative DOM — render() only provides the mount point
   protected render() { return html``; }
 
   private _sync() {
-    // Format buttons
-    for (const [cmd, btn] of this._fmtBtns) {
-      const active = isFormatActive(cmd);
-      btn.setAttribute("aria-pressed", String(active));
-    }
-
-    // Block select
-    if (this._blockSel) {
-      this._blockSel.value = currentBlockTag();
-    }
-
-    // Undo / redo availability
     if (this._undoBtn) this._undoBtn.disabled = !canUndo();
     if (this._redoBtn) this._redoBtn.disabled = !canRedo();
   }
@@ -82,10 +48,10 @@ export class ToolBar extends WolComponent {
       return d;
     };
 
-    const mkBtn = (iconKey: string, title: string, onClick: () => void, cmd?: string) => {
+    const mkBtn = (iconKey: string, title: string, onClick: () => void) => {
       const b = document.createElement("button");
-      b.type      = "button";
-      b.title     = title;
+      b.type = "button";
+      b.title = title;
       b.innerHTML = ICONS[iconKey]!;
       b.className = [
         "p-1.5 rounded transition-colors cursor-pointer",
@@ -93,27 +59,32 @@ export class ToolBar extends WolComponent {
         "hover:bg-stone-100 dark:hover:bg-stone-800",
         "hover:text-stone-800 dark:hover:text-stone-200",
         "disabled:opacity-30 disabled:cursor-not-allowed",
-        "aria-pressed:bg-stone-900 dark:aria-pressed:bg-stone-100",
-        "aria-pressed:text-stone-50 dark:aria-pressed:text-stone-900",
       ].join(" ");
-      // mousedown keeps focus in editor
       b.addEventListener("mousedown", (e) => {
         e.preventDefault();
         onClick();
-        this._sync();
       });
-      if (cmd) this._fmtBtns.set(cmd, b);
       return b;
     };
 
-    // ── Undo / Redo ───────────────────────────────────────────────────────────
+    // ── Undo / Redo ───────────────────────────────────────────────────────
     const undoBtn = mkBtn("undo", "Undo (Ctrl+Z)", () => {
-      document.getElementById("wol-editor")?.focus();
-      undo();
+      const prev = undo();
+      if (prev === null) return;
+      const ta = getEditor();
+      if (!ta) return;
+      ta.value = prev;
+      ta.dispatchEvent(new Event("input", { bubbles: true }));
+      ta.focus();
     });
     const redoBtn = mkBtn("redo", "Redo (Ctrl+Y)", () => {
-      document.getElementById("wol-editor")?.focus();
-      redo();
+      const next = redo();
+      if (next === null) return;
+      const ta = getEditor();
+      if (!ta) return;
+      ta.value = next;
+      ta.dispatchEvent(new Event("input", { bubbles: true }));
+      ta.focus();
     });
     undoBtn.disabled = true;
     redoBtn.disabled = true;
@@ -123,58 +94,53 @@ export class ToolBar extends WolComponent {
     row.appendChild(redoBtn);
     row.appendChild(sep());
 
-    // ── Inline formats ────────────────────────────────────────────────────────
-    row.appendChild(mkBtn("bold",          "Bold (Ctrl+B)",           () => { saveHistory(); format("bold");          }, "bold"));
-    row.appendChild(mkBtn("italic",        "Italic (Ctrl+I)",         () => { saveHistory(); format("italic");        }, "italic"));
-    row.appendChild(mkBtn("underline",     "Underline (Ctrl+U)",      () => { saveHistory(); format("underline");     }, "underline"));
-    row.appendChild(mkBtn("strikethrough", "Strikethrough (Ctrl+⇧X)", () => { saveHistory(); format("strikethrough"); }, "strikethrough"));
+    // ── Inline formats ────────────────────────────────────────────────────
+    row.appendChild(mkBtn("bold",          "Bold (Ctrl+B)",           () => { saveHistory(getEditor()?.value ?? ""); insertInline("<strong>", "</strong>"); }));
+    row.appendChild(mkBtn("italic",        "Italic (Ctrl+I)",         () => { saveHistory(getEditor()?.value ?? ""); insertInline("<em>",     "</em>");     }));
+    row.appendChild(mkBtn("underline",     "Underline (Ctrl+U)",      () => { saveHistory(getEditor()?.value ?? ""); insertInline("<u>",      "</u>");      }));
+    row.appendChild(mkBtn("strikethrough", "Strikethrough (Ctrl+⇧X)", () => { saveHistory(getEditor()?.value ?? ""); insertInline("<s>",      "</s>");      }));
     row.appendChild(sep());
 
-    // ── Block select ──────────────────────────────────────────────────────────
-    const sel = document.createElement("select");
-    sel.title     = "Block type";
-    sel.className = "h-7 px-1.5 text-xs rounded border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 cursor-pointer font-mono focus:outline-none";
+    // ── Block buttons ─────────────────────────────────────────────────────
+    const blockLabels: [string, string][] = [
+      ["p",  "P"],
+      ["h1", "H1"],
+      ["h2", "H2"],
+      ["h3", "H3"],
+      ["h4", "H4"],
+      ["h5", "H5"],
+      ["h6", "H6"],
+    ];
 
-    for (const [val, label] of BLOCKS) {
-      const o = document.createElement("option");
-      o.value       = val;
-      o.textContent = label;
-      sel.appendChild(o);
-    }
-
-    sel.addEventListener("mousedown", () => {
-      // Ensure editor has focus so execCommand targets it
-      document.getElementById("wol-editor")?.focus();
-    });
-
-    sel.addEventListener("change", () => {
-      saveHistory();
-      applyBlock(sel.value);
-      // Re-focus editor after select interaction
-      requestAnimationFrame(() => {
-        document.getElementById("wol-editor")?.focus();
-        this._sync();
+    for (const [tag, label] of blockLabels) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.title = tag === "p" ? "Paragraph" : `Heading ${tag[1]}`;
+      b.textContent = label;
+      b.className = [
+        "px-1.5 h-6 text-[11px] font-mono font-medium rounded transition-colors cursor-pointer",
+        "text-stone-500 dark:text-stone-400",
+        "hover:bg-stone-100 dark:hover:bg-stone-800",
+        "hover:text-stone-800 dark:hover:text-stone-200",
+      ].join(" ");
+      b.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        const ta = getEditor();
+        if (!ta) return;
+        saveHistory(ta.value);
+        wrapBlock(tag);
       });
-    });
+      row.appendChild(b);
+    }
+    row.appendChild(sep());
 
-    this._blockSel = sel;
-    row.appendChild(sel);
+    // ── Lists ─────────────────────────────────────────────────────────────
+    row.appendChild(mkBtn("ul", "Unordered list", () => { saveHistory(getEditor()?.value ?? ""); wrapList("ul"); }));
+    row.appendChild(mkBtn("ol", "Ordered list",   () => { saveHistory(getEditor()?.value ?? ""); wrapList("ol"); }));
 
-    // ── Spacer ────────────────────────────────────────────────────────────────
+    // ── Spacer ────────────────────────────────────────────────────────────
     const spacer = document.createElement("div");
     spacer.className = "flex-1";
     row.appendChild(spacer);
-
-    // ── HTML toggle ───────────────────────────────────────────────────────────
-    const htmlBtn = document.createElement("button");
-    htmlBtn.type      = "button";
-    htmlBtn.title     = "Toggle HTML panel";
-    htmlBtn.innerHTML = ICONS.code!;
-    htmlBtn.className = "p-1.5 rounded text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors";
-    htmlBtn.addEventListener("mousedown", (e) => {
-      e.preventDefault();
-      toggleShowHtml();
-    });
-    row.appendChild(htmlBtn);
   }
 }
