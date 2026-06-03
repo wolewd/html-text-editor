@@ -258,39 +258,13 @@ export function insertBr(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a table, or add a row if already inside one. */
+/** Insert a new table at the cursor */
 export function insertTable(): void {
   const ta = getEditor();
   if (!ta) return;
   ta.focus();
 
   const pos = ta.selectionStart;
-  const text = ta.value;
-
-  // ── Check if we're inside an existing <table> ─────────────────────────
-  const before = text.substring(0, pos);
-  const after = text.substring(pos);
-  const tableOpen = lastIndexOfUnclosed(before, "<table>", "</table>");
-  if (tableOpen !== -1) {
-    // We're inside a table — add a new row before </table>
-    const tableClose = after.indexOf("</table>");
-    const tableEnd = tableClose === -1 ? pos + after.length : pos + tableClose;
-    const tableContent = text.substring(tableOpen, tableEnd);
-    // Count cells in the first <tr>
-    const firstRowMatch = tableContent.match(/<tr>([\s\S]*?)<\/tr>/);
-    const colCount = firstRowMatch ? ((firstRowMatch[1]!.match(/<td>/g) || []).length + (firstRowMatch[1]!.match(/<th>/g) || []).length) : 2;
-    const cells = Array(colCount).fill("    <td></td>").join("\n");
-    const newRow = `  <tr>\n${cells}\n  </tr>\n`;
-    const insertPos = tableEnd;
-    ta.setRangeText(newRow, insertPos, insertPos, "end");
-    const cursor = insertPos + 15; // after   <tr>\n    <td>
-    ta.selectionStart = cursor;
-    ta.selectionEnd = cursor;
-    ta.dispatchEvent(new Event("input", { bubbles: true }));
-    return;
-  }
-
-  // ── Not inside a table — insert a new table ───────────────────────────
   const tpl = [
     "<table>",
     "  <tr>",
@@ -306,6 +280,34 @@ export function insertTable(): void {
 
   ta.setRangeText(tpl, pos, ta.selectionEnd, "end");
   const cursor = pos + tpl.indexOf("<td>") + 4;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Add a row to the enclosing table */
+export function insertTableRow(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const pos = ta.selectionStart;
+  const text = ta.value;
+
+  const before = text.substring(0, pos);
+  const after = text.substring(pos);
+  const tableOpen = lastIndexOfUnclosed(before, "<table>", "</table>");
+  if (tableOpen === -1) return;
+
+  const tableClose = after.indexOf("</table>");
+  const tableEnd = tableClose === -1 ? pos + after.length : pos + tableClose;
+  const tableContent = text.substring(tableOpen, tableEnd);
+  const firstRowMatch = tableContent.match(/<tr>([\s\S]*?)<\/tr>/);
+  const colCount = firstRowMatch ? ((firstRowMatch[1]!.match(/<td>/g) || []).length + (firstRowMatch[1]!.match(/<th>/g) || []).length) : 2;
+  const cells = Array(colCount).fill("    <td></td>").join("\n");
+  const newRow = `  <tr>\n${cells}\n  </tr>\n`;
+  ta.setRangeText(newRow, tableEnd, tableEnd, "end");
+  const cursor = tableEnd + 15;
   ta.selectionStart = cursor;
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
