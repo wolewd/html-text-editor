@@ -44,7 +44,19 @@ export class ToolBar extends WolComponent {
       // Only update from DOM when we're not in the middle of applying a block.
       // During apply, _pendingTag holds the chosen value so stale
       // selectionchange events can't overwrite what the user just picked.
-      this._blockSel.value = currentBlockTag();
+      const tag = currentBlockTag();
+      if (tag === "mixed") {
+        if (!this._blockSel.querySelector("option[value=mixed]")) {
+          const o = document.createElement("option");
+          o.value = "mixed";
+          o.textContent = "mixed";
+          o.disabled = true;
+          this._blockSel.appendChild(o);
+        }
+      } else {
+        this._blockSel.querySelector("option[value=mixed]")?.remove();
+      }
+      this._blockSel.value = tag;
     }
     for (const [cmd, btn] of this._cmdBtns) {
       btn.setAttribute("aria-pressed", String(isFormatActive(cmd)));

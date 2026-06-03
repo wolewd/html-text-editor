@@ -150,7 +150,6 @@ export function applyBlock(
     convertAllBlocks(editor, range, tag);
     editor.dispatchEvent(new InputEvent("input", { bubbles: true }));
     restoreSelection(savedSel, savedRange);
-    document.dispatchEvent(new Event("selectionchange"));
     _busy = false;
     return;
   }
@@ -230,17 +229,29 @@ function convertAllBlocks(root: HTMLElement, range: Range, tag: string) {
 
 export function currentBlockTag(): string {
   const editor = document.getElementById("wol-editor");
-  const sel    = window.getSelection();
+  if (!editor) return "p";
+  const sel = window.getSelection();
+  if (!sel?.rangeCount) return "p";
 
-  if (sel?.rangeCount) {
-    let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
-    while (node && node !== editor) {
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const tag = (node as HTMLElement).tagName.toLowerCase();
-        if ((BLOCK_TAGS as readonly string[]).includes(tag)) return tag;
-      }
-      node = node.parentNode;
+  const range = sel.getRangeAt(0);
+
+  // Multi-block selection — check all blocks in range
+  if (!range.collapsed) {
+    const blocks = getSelectedBlocks(editor, range);
+    if (blocks.length > 1) {
+      const tags = new Set(blocks.map(b => b.tagName.toLowerCase()));
+      return tags.size === 1 ? [...tags][0] : "mixed";
     }
+  }
+
+  // Single cursor — walk up to find the block
+  let node: Node | null = range.commonAncestorContainer;
+  while (node && node !== editor) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = (node as HTMLElement).tagName.toLowerCase();
+      if ((BLOCK_TAGS as readonly string[]).includes(tag)) return tag;
+    }
+    node = node.parentNode;
   }
 
   return "p";
