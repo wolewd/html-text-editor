@@ -36,6 +36,10 @@ function wrapHtml(source: string): string {
   th { font-weight: 600; background: #fafaf9; }
   pre { background: #f5f5f4; border: 1px solid #d6d3d1; border-radius: 4px; padding: 1rem; overflow-x: auto; margin: 0.5rem 0; }
   code { font-family: "IBM Plex Mono", monospace; font-size: 0.875em; }
+  blockquote { border-left: 3px solid #d6d3d1; padding-left: 1rem; margin: 0.5rem 0; color: #57534e; }
+  a { color: #2563eb; text-decoration: underline; }
+  img { max-width: 100%; height: auto; border-radius: 4px; }
+  video { max-width: 100%; border-radius: 4px; }
 </style>
 </head>
 <body>${source}</body>

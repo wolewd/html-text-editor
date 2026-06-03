@@ -182,3 +182,61 @@ export function insertCodeBlock(): void {
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
+
+/** Insert a link — wraps selection or inserts placeholder */
+export function insertLink(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const url = prompt("URL:", "https://");
+  if (!url) return;
+
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const selected = ta.value.substring(start, end) || "link";
+  const wrapped = `<a href="${url}">${selected}</a>`;
+
+  ta.setRangeText(wrapped, start, end, "end");
+  const cursor = start + wrapped.length - 4; // before </a>
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Insert an image */
+export function insertImage(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const url = prompt("Image URL:", "https://");
+  if (!url) return;
+
+  const img = `<img src="${url}" alt="">`;
+  const pos = ta.selectionStart;
+  ta.setRangeText(img, pos, ta.selectionEnd, "end");
+  // Place cursor on alt text
+  const cursor = pos + img.indexOf('alt="') + 5;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Insert a video */
+export function insertVideo(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const url = prompt("Video URL:", "https://");
+  if (!url) return;
+
+  const video = `<video src="${url}" controls></video>`;
+  const pos = ta.selectionStart;
+  ta.setRangeText(video, pos, ta.selectionEnd, "end");
+  const cursor = pos + video.length;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
