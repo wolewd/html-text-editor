@@ -45,17 +45,6 @@ export class ToolBar extends WolComponent {
       // During apply, _pendingTag holds the chosen value so stale
       // selectionchange events can't overwrite what the user just picked.
       const tag = currentBlockTag();
-      if (tag === "mixed") {
-        if (!this._blockSel.querySelector("option[value=mixed]")) {
-          const o = document.createElement("option");
-          o.value = "mixed";
-          o.textContent = "mixed";
-          o.disabled = true;
-          this._blockSel.appendChild(o);
-        }
-      } else {
-        this._blockSel.querySelector("option[value=mixed]")?.remove();
-      }
       this._blockSel.value = tag;
     }
     for (const [cmd, btn] of this._cmdBtns) {
@@ -120,6 +109,13 @@ export class ToolBar extends WolComponent {
       o.textContent = label;
       blockSel.appendChild(o);
     }
+
+    // Hidden "mixed" indicator — shown as value when selection spans mixed headings
+    const mixedOpt = document.createElement("option");
+    mixedOpt.value = "mixed";
+    mixedOpt.textContent = "mixed";
+    mixedOpt.hidden = true;
+    blockSel.appendChild(mixedOpt);
 
     let savedRange: Range | null = null;
     let savedSel:   { sn: Node; so: number; en: Node; eo: number } | null = null;

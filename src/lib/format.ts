@@ -195,6 +195,29 @@ function restoreSelection(
   }
 }
 
+function getSelectedBlocks(root: HTMLElement, range: Range): HTMLElement[] {
+  let s: Node | null = range.startContainer;
+  while (s && s !== root && !(s.nodeType === Node.ELEMENT_NODE && (s as HTMLElement).matches(BLOCK_SEL))) s = s.parentNode;
+  let e: Node | null = range.endContainer;
+  while (e && e !== root && !(e.nodeType === Node.ELEMENT_NODE && (e as HTMLElement).matches(BLOCK_SEL))) e = e.parentNode;
+
+  const result: HTMLElement[] = [];
+  if (!s || !e || s === root || e === root) return result;
+
+  // Handle reverse selection
+  if (s.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING) [s, e] = [e, s];
+
+  let cur: Node | null = s;
+  while (cur) {
+    if (cur.nodeType === Node.ELEMENT_NODE && (cur as HTMLElement).matches(BLOCK_SEL)) {
+      result.push(cur as HTMLElement);
+    }
+    if (cur === e) break;
+    cur = cur.nextSibling;
+  }
+  return result;
+}
+
 function convertAllBlocks(root: HTMLElement, range: Range, tag: string) {
   let sNode: Node | null = range.startContainer;
   while (sNode && sNode !== root && !(sNode.nodeType === Node.ELEMENT_NODE && (sNode as HTMLElement).matches(BLOCK_SEL))) {
