@@ -1,6 +1,7 @@
 import { WolComponent, html, define } from "wolfe";
 import { editorStore } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo } from "../lib/history.ts";
+import { format, isFormatActive } from "../lib/format.ts";
 
 const icons: Record<string, string> = {
   bold: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -30,16 +31,9 @@ export class ToolBar extends WolComponent {
     document.addEventListener("wolfe:format-change", () => this._updateActiveStates());
   }
 
-  private _exec(cmd: string, value?: string) {
-    saveHistory();
-    document.getElementById("wol-editor")?.focus();
-    document.execCommand(cmd, false, value);
-    this._updateActiveStates();
-  }
-
   private _updateActiveStates() {
     ["bold", "italic", "underline", "strikethrough"].forEach(cmd => {
-      const active = document.queryCommandState(cmd);
+      const active = isFormatActive(cmd);
       const b = this.querySelector(`[data-cmd="${cmd}"]`) as HTMLElement | null;
       if (b) b.setAttribute("aria-pressed", String(active));
     });
@@ -62,10 +56,10 @@ export class ToolBar extends WolComponent {
     add("undo", "Undo (Ctrl+Z)", () => { document.getElementById("wol-editor")?.focus(); undo(); });
     add("redo", "Redo (Ctrl+Y)", () => { document.getElementById("wol-editor")?.focus(); redo(); });
     t.appendChild(d.cloneNode());
-    add("bold", "Bold (Ctrl+B)", () => this._exec("bold"), "bold");
-    add("italic", "Italic (Ctrl+I)", () => this._exec("italic"), "italic");
-    add("underline", "Underline (Ctrl+U)", () => this._exec("underline"), "underline");
-    add("strikethrough", "Strikethrough (Ctrl+Shift+X)", () => this._exec("strikethrough"), "strikethrough");
+    add("bold", "Bold (Ctrl+B)", () => { saveHistory(); format("bold"); this._updateActiveStates(); }, "bold");
+    add("italic", "Italic (Ctrl+I)", () => { saveHistory(); format("italic"); this._updateActiveStates(); }, "italic");
+    add("underline", "Underline (Ctrl+U)", () => { saveHistory(); format("underline"); this._updateActiveStates(); }, "underline");
+    add("strikethrough", "Strikethrough (Ctrl+Shift+X)", () => { saveHistory(); format("strikethrough"); this._updateActiveStates(); }, "strikethrough");
 
     // Spacer
     const spacer = document.createElement("div");

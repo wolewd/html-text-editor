@@ -49,6 +49,11 @@ export function toggleDark() {
 }
 
 export function updateStats(el: HTMLElement) {
+  // Ignore the empty placeholder <p><br></p>
+  if (el.innerHTML === "<p><br></p>") {
+    editorStore.setState({ wordCount: 0, charCount: 0 });
+    return;
+  }
   const text = el.innerText || "";
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
   const chars = text.length;

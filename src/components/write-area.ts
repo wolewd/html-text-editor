@@ -2,6 +2,7 @@ import { WolComponent, html, define } from "wolfe";
 import { editorStore, updateStats, saveHtml } from "../stores/editorStore.ts";
 import type { EditorState } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo } from "../lib/history.ts";
+import { format } from "../lib/format.ts";
 
 @define("write-area")
 export class WriteArea extends WolComponent {
@@ -18,9 +19,7 @@ export class WriteArea extends WolComponent {
     this.editorEl = this.find<HTMLElement>("#wol-editor");
     if (!this.editorEl) return;
 
-    // Default to <p> paragraphs
-    this.editorEl.focus();
-    document.execCommand("defaultParagraphSeparator", false, "p");
+    // Seed editor with a <p> wrapper so the browser naturally wraps new text in paragraphs
     if (!this.editorEl.innerHTML.trim() || this.editorEl.innerHTML === "<br>") {
       this.editorEl.innerHTML = "<p><br></p>";
     }
@@ -29,6 +28,13 @@ export class WriteArea extends WolComponent {
     this.editorEl.addEventListener("input", (e) => {
       if (!this.editorEl) return;
       if (e.isTrusted) saveHistory();
+
+      // Re-wrap bare <br> or empty editor — browser drops <p> when user deletes all content
+      const html = this.editorEl.innerHTML;
+      if (html === "<br>" || html === "") {
+        this.editorEl.innerHTML = "<p><br></p>";
+      }
+
       updateStats(this.editorEl);
       saveHtml(this.editorEl);
     });
@@ -38,9 +44,9 @@ export class WriteArea extends WolComponent {
       const ctrl = ev.ctrlKey || ev.metaKey;
       if (ctrl && !ev.shiftKey) {
         switch (ev.key) {
-          case "b": ev.preventDefault(); saveHistory(); document.execCommand("bold"); break;
-          case "i": ev.preventDefault(); saveHistory(); document.execCommand("italic"); break;
-          case "u": ev.preventDefault(); saveHistory(); document.execCommand("underline"); break;
+          case "b": ev.preventDefault(); saveHistory(); format("bold"); break;
+          case "i": ev.preventDefault(); saveHistory(); format("italic"); break;
+          case "u": ev.preventDefault(); saveHistory(); format("underline"); break;
           case "z": ev.preventDefault(); undo(); break;
           case "y": ev.preventDefault(); redo(); break;
         }
@@ -49,7 +55,7 @@ export class WriteArea extends WolComponent {
       if (ctrl && ev.shiftKey && ev.key === "X") {
         ev.preventDefault();
         saveHistory();
-        document.execCommand("strikethrough");
+        format("strikethrough");
         document.dispatchEvent(new CustomEvent("wolfe:format-change"));
       }
     });
