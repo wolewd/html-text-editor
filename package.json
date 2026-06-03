@@ -4,13 +4,15 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@tailwindcss/cli": "latest",
+    "@types/bun": "latest",
+    "tailwindcss": "^4.3.0"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "wolfe": "git+ssh://git@github.com/wolewd/wolfe.git#development"
+    "wolfe": "git+ssh://git@github.com/wolewd/wolfe.git"
   },
   "scripts": {
     "dev": "bun run index.ts --dev",

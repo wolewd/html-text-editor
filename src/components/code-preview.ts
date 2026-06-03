@@ -6,43 +6,9 @@ function wrapHtml(source: string): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body {
-    font-family: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-    font-size: 16px;
-    line-height: 1.75;
-    color: #1c1917;
-    background: #fff;
-    max-width: 42rem;
-    margin: 2rem auto;
-    padding: 0 1.5rem;
-  }
-  h1 { font-size: 2.25rem; font-weight: 700; margin: 2rem 0 0.75rem; line-height: 1.25; letter-spacing: -0.025em; }
-  h2 { font-size: 1.875rem; font-weight: 700; margin: 1.75rem 0 0.625rem; line-height: 1.25; letter-spacing: -0.025em; }
-  h3 { font-size: 1.5rem; font-weight: 600; margin: 1.5rem 0 0.5rem; line-height: 1.375; }
-  h4 { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 0.5rem; line-height: 1.375; }
-  h5 { font-size: 1.125rem; font-weight: 500; margin: 1rem 0 0.375rem; }
-  h6 { font-size: 1rem; font-weight: 500; margin: 1rem 0 0.375rem; color: #78716c; }
-  p { margin: 0.25rem 0; }
-  strong, b { font-weight: 700; }
-  em, i { font-style: italic; }
-  u { text-decoration: underline; }
-  s, del { text-decoration: line-through; }
-  ul, ol { padding-left: 1.5rem; margin: 0.25rem 0; }
-  li { margin: 0.125rem 0; }
-  hr { border: none; border-top: 1px solid #d6d3d1; margin: 1.5rem 0; }
-  table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
-  td, th { border: 1px solid #d6d3d1; padding: 0.5rem 0.75rem; text-align: left; }
-  th { font-weight: 600; background: #fafaf9; }
-  pre { background: #f5f5f4; border: 1px solid #d6d3d1; border-radius: 4px; padding: 1rem; overflow-x: auto; margin: 0.5rem 0; }
-  code { font-family: "IBM Plex Mono", monospace; font-size: 0.875em; }
-  blockquote { border-left: 3px solid #d6d3d1; padding-left: 1rem; margin: 0.5rem 0; color: #57534e; }
-  a { color: #2563eb; text-decoration: underline; }
-  img { max-width: 100%; height: auto; border-radius: 4px; }
-  video { max-width: 100%; border-radius: 4px; }
-</style>
+<script src="https://cdn.tailwindcss.com?plugins=typography"><\/script>
 </head>
-<body>${source}</body>
+<body class="prose max-w-2xl mx-auto my-8 px-6 bg-white text-stone-900">${source}</body>
 </html>`;
 }
 
@@ -53,12 +19,12 @@ export class CodePreview extends WolComponent {
 
   constructor() {
     super();
-    this._state = { ...editorStore.state };
+    this._state = { ...editorStore.getState };
   }
 
   protected override onMount() {
     this._unsub = editorStore.subscribe((s) => {
-      this._state = s as EditorState;
+      this._state = s;
       this.update();
       requestAnimationFrame(() => this._writeIframe());
     });
