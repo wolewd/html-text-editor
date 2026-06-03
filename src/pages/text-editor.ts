@@ -30,7 +30,7 @@ export class TextEditor extends WolComponent {
             <code-editor class="block w-full h-full"></code-editor>
           </div>
           <div hidden=${!show}
-            class="w-lg max-w-full border-l border-stone-200 dark:border-stone-800 shadow-lg flex flex-col bg-white shrink-0"
+            class="w-lg max-w-full dark:border-stone-800 shadow-lg flex flex-col bg-white shrink-0"
           >
             <div class="flex items-center justify-between px-4 h-10 border-b border-stone-200 bg-stone-50 shrink-0">
               <span class="text-[10px] font-mono text-stone-400 tracking-widest uppercase">Preview</span>
