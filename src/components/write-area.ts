@@ -1,37 +1,22 @@
 import { WolComponent, html, define } from "wolfe";
-import { editorStore, updateStats, saveHtml } from "../stores/editorStore.ts";
-import type { EditorState } from "../stores/editorStore.ts";
+import { updateStats, saveHtml } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo } from "../lib/history.ts";
 import { format, isApplyingBlock } from "../lib/format.ts";
 
 @define("write-area")
 export class WriteArea extends WolComponent {
-  private _state: EditorState;
-  private _unsub: (() => void) | null = null;
-  private editorEl: HTMLElement | null = null;
-
-  constructor() {
-    super();
-    this._state = { ...editorStore.state };
-  }
-
   protected override onMount() {
-    this.editorEl = this.find<HTMLElement>("#wol-editor");
-    if (!this.editorEl) return;
+    const editorEl = this.find<HTMLElement>("#wol-editor")!;
 
-    // Seed editor with a <p> wrapper so the browser naturally wraps new text in paragraphs
-    if (!this.editorEl.innerHTML.trim() || this.editorEl.innerHTML === "<br>") {
-      this.editorEl.innerHTML = "<p><br></p>";
+    if (!editorEl.innerHTML.trim() || editorEl.innerHTML === "<br>") {
+      editorEl.innerHTML = "<p><br></p>";
     }
     saveHistory();
-    this.editorEl.focus();
+    editorEl.focus();
 
-    this.editorEl.addEventListener("input", (e) => {
-      if (!this.editorEl) return;
-
-      // Normalize <div> blocks back to <p> — browser defaults to div after headings
-      const divs = Array.from(this.editorEl.querySelectorAll(":scope > div"));
-      for (const div of divs) {
+    editorEl.addEventListener("input", (e) => {
+      // Normalize <div> → <p>
+      for (const div of Array.from(editorEl.querySelectorAll(":scope > div"))) {
         const p = document.createElement("p");
         while (div.firstChild) p.appendChild(div.firstChild);
         div.replaceWith(p);
@@ -39,30 +24,27 @@ export class WriteArea extends WolComponent {
 
       if (e.isTrusted) saveHistory();
 
-      // Re-wrap bare <br> or empty editor — browser drops <p> when user deletes all content
-      const html = this.editorEl.innerHTML;
-      if (!isApplyingBlock() && (html === "<br>" || html === "")) {
-        this.editorEl.innerHTML = "<p><br></p>";
+      const h = editorEl.innerHTML;
+      if (!isApplyingBlock() && (h === "<br>" || h === "")) {
+        editorEl.innerHTML = "<p><br></p>";
       }
 
-      updateStats(this.editorEl);
-      saveHtml(this.editorEl);
+      updateStats(editorEl);
+      saveHtml(editorEl);
     });
 
-    this.editorEl.addEventListener("keydown", (e) => {
+    editorEl.addEventListener("keydown", (e) => {
       const ev = e as KeyboardEvent;
 
-      // Enter inside a heading: create another heading of the same type
       if (ev.key === "Enter" && !ev.shiftKey) {
         const sel = window.getSelection();
-        if (sel && sel.rangeCount) {
+        if (sel?.rangeCount) {
           let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
           while (node && node.nodeType !== Node.ELEMENT_NODE) node = node.parentNode;
-          const h = (node as HTMLElement)?.closest?.("h1, h2, h3, h4, h5, h6");
+          const h = (node as HTMLElement)?.closest?.("h1,h2,h3,h4,h5,h6");
           if (h) {
             ev.preventDefault();
-            const tag = h.tagName.toLowerCase();
-            const next = document.createElement(tag);
+            const next = document.createElement(h.tagName.toLowerCase());
             next.innerHTML = "<br>";
             h.after(next);
             const nr = document.createRange();
@@ -93,15 +75,10 @@ export class WriteArea extends WolComponent {
         document.dispatchEvent(new CustomEvent("wolfe:format-change"));
       }
     });
-
-    this._unsub = editorStore.subscribe((s) => {
-      this._state = s as EditorState;
-      this.update();
-    });
-
-    return () => { this._unsub?.(); this._unsub = null; };
   }
 
+  // render() is static — never changes, so patch() is a no-op every time.
+  // write-area never calls update(), so this only ever runs once.
   protected render() {
     return html`
       <div class="w-full h-full overflow-y-auto p-8 bg-stone-50 dark:bg-stone-950">
