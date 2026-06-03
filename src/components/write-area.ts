@@ -24,6 +24,7 @@ export class WriteArea extends WolComponent {
       this.editorEl.innerHTML = "<p><br></p>";
     }
     saveHistory();
+    this.editorEl.focus();
 
     this.editorEl.addEventListener("input", (e) => {
       if (!this.editorEl) return;
