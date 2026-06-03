@@ -1,8 +1,9 @@
 import { WolComponent, html, define } from "wolfe";
-import { save as saveHistory, undo, redo, canUndo, canRedo } from "../lib/history.ts";
+import { save as saveHistory, canUndo, canRedo } from "../lib/history.ts";
 import { insertInline, wrapBlock, wrapList, insertHr, insertBr, insertTable, insertTableColumn, insertTableRow, insertCodeBlock, insertLink, insertImage, insertVideo, getEditor } from "../lib/tag-insert.ts";
 import { hint } from "../lib/notifications.ts";
 import { togglePreview, isPreviewShown } from "../stores/previewStore.ts";
+import { undoFromHistory, redoFromHistory } from "./code-editor.ts";
 
 const ICONS: Record<string, string> = {
   bold:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -112,22 +113,12 @@ export class ToolBar extends WolComponent {
 
     // ── Undo / Redo ───────────────────────────────────────────────────────
     const undoBtn = mkBtn("undo", "Undo (Ctrl+Z)", () => {
-      const prev = undo();
-      if (prev === null) return;
-      const ta = getEditor();
-      if (!ta) return;
-      ta.value = prev;
-      ta.dispatchEvent(new Event("input", { bubbles: true }));
-      ta.focus();
+      saveHistory(getEditor()?.value ?? "");
+      undoFromHistory();
     });
     const redoBtn = mkBtn("redo", "Redo (Ctrl+Y)", () => {
-      const next = redo();
-      if (next === null) return;
-      const ta = getEditor();
-      if (!ta) return;
-      ta.value = next;
-      ta.dispatchEvent(new Event("input", { bubbles: true }));
-      ta.focus();
+      saveHistory(getEditor()?.value ?? "");
+      redoFromHistory();
     });
     undoBtn.disabled = true;
     redoBtn.disabled = true;
