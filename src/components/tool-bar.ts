@@ -1,6 +1,6 @@
 import { WolComponent, html, define } from "wolfe";
 import { save as saveHistory, undo, redo, canUndo, canRedo } from "../lib/history.ts";
-import { insertInline, wrapBlock, wrapList, insertHr, insertBr, getEditor } from "../lib/tag-insert.ts";
+import { insertInline, wrapBlock, wrapList, insertHr, insertBr, insertTable, insertCodeBlock, getEditor } from "../lib/tag-insert.ts";
 
 const ICONS: Record<string, string> = {
   bold:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -15,6 +15,8 @@ const ICONS: Record<string, string> = {
   ol:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="3" y="9" font-size="8" fill="currentColor" stroke="none">1</text><text x="3" y="15" font-size="8" fill="currentColor" stroke="none">2</text><text x="3" y="21" font-size="8" fill="currentColor" stroke="none">3</text></svg>`,
   hr:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
   br:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7v4H5"/><polyline points="9 7 5 11 9 15"/></svg>`,
+  table:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>`,
+  code:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
 };
 
 @define("tool-bar")
@@ -146,6 +148,9 @@ export class ToolBar extends WolComponent {
     row.appendChild(sep());
     row.appendChild(mkBtn("hr", "Horizontal rule", () => { saveHistory(getEditor()?.value ?? ""); insertHr(); }));
     row.appendChild(mkBtn("br", "Line break",      () => { saveHistory(getEditor()?.value ?? ""); insertBr(); }));
+    row.appendChild(sep());
+    row.appendChild(mkBtn("table", "Table",         () => { saveHistory(getEditor()?.value ?? ""); insertTable(); }));
+    row.appendChild(mkBtn("code", "Code block",     () => { saveHistory(getEditor()?.value ?? ""); insertCodeBlock(); }));
 
     // ── Spacer ────────────────────────────────────────────────────────────
     const spacer = document.createElement("div");

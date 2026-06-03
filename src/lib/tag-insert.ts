@@ -134,3 +134,51 @@ export function insertBr(): void {
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
+
+/** Insert a 2×2 table with header row at the cursor */
+export function insertTable(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const tpl = [
+    "<table>",
+    "  <tr>",
+    "    <th>Column 1</th>",
+    "    <th>Column 2</th>",
+    "  </tr>",
+    "  <tr>",
+    "    <td></td>",
+    "    <td></td>",
+    "  </tr>",
+    "  <tr>",
+    "    <td></td>",
+    "    <td></td>",
+    "  </tr>",
+    "</table>",
+  ].join("\n");
+
+  const pos = ta.selectionStart;
+  ta.setRangeText(tpl, pos, ta.selectionEnd, "end");
+  // Place cursor inside the first <td>
+  const cursor = pos + tpl.indexOf("<td>") + 4;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Insert a code block at the cursor */
+export function insertCodeBlock(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const tpl = "<code><pre>\n\n</pre></code>";
+  const pos = ta.selectionStart;
+  ta.setRangeText(tpl, pos, ta.selectionEnd, "end");
+  // Place cursor inside the code block
+  const cursor = pos + 12; // after <code><pre>\n
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}

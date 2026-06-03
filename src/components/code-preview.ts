@@ -31,6 +31,11 @@ function wrapHtml(source: string): string {
   ul, ol { padding-left: 1.5rem; margin: 0.25rem 0; }
   li { margin: 0.125rem 0; }
   hr { border: none; border-top: 1px solid #d6d3d1; margin: 1.5rem 0; }
+  table { border-collapse: collapse; width: 100%; margin: 0.5rem 0; }
+  td, th { border: 1px solid #d6d3d1; padding: 0.5rem 0.75rem; text-align: left; }
+  th { font-weight: 600; background: #fafaf9; }
+  pre { background: #f5f5f4; border: 1px solid #d6d3d1; border-radius: 4px; padding: 1rem; overflow-x: auto; margin: 0.5rem 0; }
+  code { font-family: "IBM Plex Mono", monospace; font-size: 0.875em; }
 </style>
 </head>
 <body>${source}</body>
