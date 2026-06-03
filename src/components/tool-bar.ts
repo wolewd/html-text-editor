@@ -169,7 +169,7 @@ export class ToolBar extends WolComponent {
     const htmlBtn = document.createElement("button");
     htmlBtn.type      = "button";
     htmlBtn.title     = "Toggle HTML panel";
-    htmlBtn.innerHTML = ICONS.code;
+    htmlBtn.innerHTML = ICONS.code!;
     htmlBtn.className = "p-1.5 rounded text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors";
     htmlBtn.addEventListener("mousedown", (e) => {
       e.preventDefault();
