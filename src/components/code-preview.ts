@@ -60,10 +60,8 @@ export class CodePreview extends WolComponent {
     this._unsub = editorStore.subscribe((s) => {
       this._state = s as EditorState;
       this.update();
-      // Write to iframe after the DOM patch completes
       requestAnimationFrame(() => this._writeIframe());
     });
-    // Initial write once the iframe exists
     requestAnimationFrame(() => this._writeIframe());
     return () => { this._unsub?.(); };
   }
@@ -78,16 +76,11 @@ export class CodePreview extends WolComponent {
 
   protected render() {
     return html`
-      <div class="w-full h-full bg-white flex flex-col">
-        <div class="flex items-center px-4 h-[40px] border-b border-stone-200 bg-stone-50 flex-shrink-0">
-          <span class="text-[10px] font-mono text-stone-400 tracking-widest uppercase">Preview</span>
-        </div>
-        <iframe
-          class="w-full flex-1 border-0"
-          sandbox="allow-same-origin allow-scripts"
-          title="HTML Preview"
-        ></iframe>
-      </div>
+      <iframe
+        class="w-full h-full border-0 bg-white"
+        sandbox="allow-same-origin allow-scripts"
+        title="HTML Preview"
+      ></iframe>
     `;
   }
 }

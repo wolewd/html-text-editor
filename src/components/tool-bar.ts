@@ -2,6 +2,7 @@ import { WolComponent, html, define } from "wolfe";
 import { save as saveHistory, undo, redo, canUndo, canRedo } from "../lib/history.ts";
 import { insertInline, wrapBlock, wrapList, insertHr, insertBr, insertTable, insertTableColumn, insertTableRow, insertCodeBlock, insertLink, insertImage, insertVideo, getEditor } from "../lib/tag-insert.ts";
 import { hint } from "../lib/notifications.ts";
+import { togglePreview, isPreviewShown } from "../stores/previewStore.ts";
 
 const ICONS: Record<string, string> = {
   bold:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -26,17 +27,26 @@ const ICONS: Record<string, string> = {
   video:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
   copy:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
   download:      `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
+  eye:           `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  eyeOff:        `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
 };
 
 @define("tool-bar")
 export class ToolBar extends WolComponent {
   private _undoBtn: HTMLButtonElement | null = null;
   private _redoBtn: HTMLButtonElement | null = null;
+  private _eyeBtn: HTMLButtonElement | null = null;
 
   protected override onMount() {
     this._build();
+    this._syncEye();
     const timer = setInterval(() => this._sync(), 200);
-    return () => clearInterval(timer);
+    const onToggle = () => this._syncEye();
+    document.addEventListener("wolfe:preview-toggle", onToggle);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("wolfe:preview-toggle", onToggle);
+    };
   }
 
   protected render() { return html``; }
@@ -44,6 +54,12 @@ export class ToolBar extends WolComponent {
   private _sync() {
     if (this._undoBtn) this._undoBtn.disabled = !canUndo();
     if (this._redoBtn) this._redoBtn.disabled = !canRedo();
+  }
+
+  private _syncEye() {
+    if (!this._eyeBtn) return;
+    this._eyeBtn.innerHTML = isPreviewShown() ? ICONS.eyeOff! : ICONS.eye!;
+    this._eyeBtn.title = isPreviewShown() ? "Hide preview" : "Show preview";
   }
 
   private _download() {
@@ -188,6 +204,9 @@ export class ToolBar extends WolComponent {
       this._download();
       hint(btn, "Downloaded!");
     }));
+    row.appendChild(sep());
+    row.appendChild(mkBtn("eye", "Toggle preview", () => { togglePreview(); }));
+    this._eyeBtn = row.lastElementChild as HTMLButtonElement;
 
     // ── Spacer ────────────────────────────────────────────────────────────
     const spacer = document.createElement("div");
