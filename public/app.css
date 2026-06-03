@@ -7,6 +7,10 @@
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
+    --color-amber-400: oklch(82.8% 0.189 84.429);
+    --color-amber-600: oklch(66.6% 0.179 58.318);
+    --color-green-400: oklch(79.2% 0.209 151.711);
+    --color-green-600: oklch(62.7% 0.194 149.214);
     --color-blue-400: oklch(70.7% 0.165 254.624);
     --color-blue-600: oklch(54.6% 0.245 262.881);
     --color-stone-50: oklch(98.5% 0.001 106.423);
@@ -210,6 +214,9 @@
   .static {
     position: static;
   }
+  .inset-0 {
+    inset: calc(var(--spacing) * 0);
+  }
   .top-0 {
     top: calc(var(--spacing) * 0);
   }
@@ -227,9 +234,6 @@
   }
   .mx-auto {
     margin-inline: auto;
-  }
-  .my-8 {
-    margin-block: calc(var(--spacing) * 8);
   }
   .block {
     display: block;
@@ -377,6 +381,9 @@
   .bg-stone-800 {
     background-color: var(--color-stone-800);
   }
+  .bg-transparent {
+    background-color: transparent;
+  }
   .bg-white {
     background-color: var(--color-white);
   }
@@ -409,6 +416,9 @@
   }
   .py-2 {
     padding-block: calc(var(--spacing) * 2);
+  }
+  .py-8 {
+    padding-block: calc(var(--spacing) * 8);
   }
   .font-mono {
     font-family: var(--font-mono);
@@ -443,6 +453,12 @@
     --tw-tracking: var(--tracking-widest);
     letter-spacing: var(--tracking-widest);
   }
+  .break-words {
+    overflow-wrap: break-word;
+  }
+  .whitespace-pre-wrap {
+    white-space: pre-wrap;
+  }
   .text-stone-100 {
     color: var(--color-stone-100);
   }
@@ -455,11 +471,11 @@
   .text-stone-500 {
     color: var(--color-stone-500);
   }
-  .text-stone-700 {
-    color: var(--color-stone-700);
-  }
   .text-stone-800 {
     color: var(--color-stone-800);
+  }
+  .text-transparent {
+    color: transparent;
   }
   .uppercase {
     text-transform: uppercase;
@@ -469,6 +485,9 @@
   }
   .underline {
     text-decoration-line: underline;
+  }
+  .caret-stone-700 {
+    caret-color: var(--color-stone-700);
   }
   .opacity-0 {
     opacity: 0%;
@@ -516,12 +535,18 @@
     -webkit-user-select: none;
     user-select: none;
   }
-  .selection\:bg-stone-200 {
+  .selection\:bg-stone-200\/50 {
     & *::selection {
-      background-color: var(--color-stone-200);
+      background-color: color-mix(in srgb, oklch(92.3% 0.003 48.717) 50%, transparent);
+      @supports (color: color-mix(in lab, red, red)) {
+        background-color: color-mix(in oklab, var(--color-stone-200) 50%, transparent);
+      }
     }
     &::selection {
-      background-color: var(--color-stone-200);
+      background-color: color-mix(in srgb, oklch(92.3% 0.003 48.717) 50%, transparent);
+      @supports (color: color-mix(in lab, red, red)) {
+        background-color: color-mix(in oklab, var(--color-stone-200) 50%, transparent);
+      }
     }
   }
   .hover\:bg-stone-100 {
@@ -560,6 +585,11 @@
       border-color: var(--color-stone-500);
     }
   }
+  .dark\:border-stone-600 {
+    &:where(.dark, .dark *) {
+      border-color: var(--color-stone-600);
+    }
+  }
   .dark\:border-stone-800 {
     &:where(.dark, .dark *) {
       border-color: var(--color-stone-800);
@@ -595,11 +625,6 @@
       color: var(--color-stone-200);
     }
   }
-  .dark\:text-stone-300 {
-    &:where(.dark, .dark *) {
-      color: var(--color-stone-300);
-    }
-  }
   .dark\:text-stone-400 {
     &:where(.dark, .dark *) {
       color: var(--color-stone-400);
@@ -620,13 +645,24 @@
       color: var(--color-stone-800);
     }
   }
-  .dark\:selection\:bg-stone-700 {
+  .dark\:caret-stone-300 {
+    &:where(.dark, .dark *) {
+      caret-color: var(--color-stone-300);
+    }
+  }
+  .dark\:selection\:bg-stone-700\/50 {
     &:where(.dark, .dark *) {
       & *::selection {
-        background-color: var(--color-stone-700);
+        background-color: color-mix(in srgb, oklch(37.4% 0.01 67.558) 50%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background-color: color-mix(in oklab, var(--color-stone-700) 50%, transparent);
+        }
       }
       &::selection {
-        background-color: var(--color-stone-700);
+        background-color: color-mix(in srgb, oklch(37.4% 0.01 67.558) 50%, transparent);
+        @supports (color: color-mix(in lab, red, red)) {
+          background-color: color-mix(in oklab, var(--color-stone-700) 50%, transparent);
+        }
       }
     }
   }
@@ -679,6 +715,25 @@ body {
   color: var(--color-stone-400);
 }
 .dark ::placeholder {
+  color: var(--color-stone-500);
+}
+.hl-attr {
+  color: var(--color-amber-600);
+}
+.hl-value {
+  color: var(--color-green-600);
+}
+.hl-comment {
+  color: var(--color-stone-400);
+  font-style: italic;
+}
+.dark .hl-attr {
+  color: var(--color-amber-400);
+}
+.dark .hl-value {
+  color: var(--color-green-400);
+}
+.dark .hl-comment {
   color: var(--color-stone-500);
 }
 @layer components {

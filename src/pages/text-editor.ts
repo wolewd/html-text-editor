@@ -32,7 +32,7 @@ export class TextEditor extends WolComponent {
           <div
             class=${panelClass}
           >
-            <div class="flex items-center justify-between px-4 h-10 border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800 shrink-0">
+            <div class="flex items-center justify-between px-4 h-10 border-b border-stone-200 dark:border-stone-600 bg-stone-50 dark:bg-stone-800 shrink-0">
               <span class="text-[10px] font-mono text-stone-400 tracking-widest uppercase">Preview</span>
               <button
                 @mousedown=${(e: Event) => { e.preventDefault(); togglePreview(); }}

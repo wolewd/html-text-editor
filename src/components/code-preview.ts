@@ -29,7 +29,7 @@ export class CodePreview extends WolComponent {
     return html`
       <div
         id="preview-output"
-        class="prose max-w-2xl mx-auto my-8 px-6 bg-white dark:bg-stone-900 h-full overflow-auto"
+        class="prose max-w-2xl mx-auto py-8 px-6 bg-white dark:bg-stone-900 h-full overflow-auto"
       ></div>
     `;
   }

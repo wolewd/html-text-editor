@@ -21,6 +21,14 @@ body {
   color: var(--color-stone-500);
 }
 
+/* Syntax highlighting */
+.hl-attr { color: var(--color-amber-600); }
+.hl-value { color: var(--color-green-600); }
+.hl-comment { color: var(--color-stone-400); font-style: italic; }
+.dark .hl-attr { color: var(--color-amber-400); }
+.dark .hl-value { color: var(--color-green-400); }
+.dark .hl-comment { color: var(--color-stone-500); }
+
 @layer components {
   .prose {
     color: var(--color-stone-700);
