@@ -290,17 +290,20 @@ export function insertTable(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a code block at the cursor */
+/** Insert a code block at the cursor. Wraps selection if any. */
 export function insertCodeBlock(): void {
   const ta = getEditor();
   if (!ta) return;
   ta.focus();
 
-  const tpl = "<code><pre>\n\n</pre></code>";
-  const pos = ta.selectionStart;
-  ta.setRangeText(tpl, pos, ta.selectionEnd, "end");
-  // Place cursor inside the code block
-  const cursor = pos + 12; // after <code><pre>\n
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const selected = ta.value.substring(start, end);
+  const tpl = `<code><pre>\n${selected}\n</pre></code>`;
+
+  ta.setRangeText(tpl, start, end, "end");
+  // Place cursor after the content
+  const cursor = start + 12 + selected.length;
   ta.selectionStart = cursor;
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
