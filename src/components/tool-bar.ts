@@ -1,5 +1,5 @@
 import { WolComponent, html, define } from "wolfe";
-import { editorStore } from "../stores/editorStore.ts";
+import { toggleShowHtml } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo, canUndo, canRedo } from "../lib/history.ts";
 import { format, isFormatActive, applyBlock, currentBlockTag } from "../lib/format.ts";
 
@@ -173,7 +173,7 @@ export class ToolBar extends WolComponent {
     htmlBtn.className = "p-1.5 rounded text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 border border-stone-200 dark:border-stone-700 cursor-pointer transition-colors";
     htmlBtn.addEventListener("mousedown", (e) => {
       e.preventDefault();
-      editorStore.setState((prev) => ({ showHtml: !prev.showHtml }));
+      toggleShowHtml();
     });
     row.appendChild(htmlBtn);
   }
