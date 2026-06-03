@@ -30,6 +30,7 @@ function wrapHtml(source: string): string {
   s, del { text-decoration: line-through; }
   ul, ol { padding-left: 1.5rem; margin: 0.25rem 0; }
   li { margin: 0.125rem 0; }
+  hr { border: none; border-top: 1px solid #d6d3d1; margin: 1.5rem 0; }
 </style>
 </head>
 <body>${source}</body>

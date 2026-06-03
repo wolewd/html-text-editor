@@ -90,3 +90,47 @@ export function wrapList(tag: "ul" | "ol"): void {
   }
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
+
+/** Insert a horizontal rule on its own line at the cursor */
+export function insertHr(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const pos = ta.selectionStart;
+  const text = ta.value;
+
+  // Find the start of the current line
+  const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+  const before = text.substring(lineStart, pos);
+
+  // If the line before cursor is not empty, put <hr> on a new line
+  const prefix = before.trim() ? "\n" : "";
+  // If there's text after cursor on this line, push it to next line
+  const lineEnd = text.indexOf("\n", pos);
+  const after = text.substring(pos, lineEnd === -1 ? text.length : lineEnd);
+  const suffix = after.trim() ? "\n" : "";
+
+  const replacement = `${prefix}<hr>${suffix}`;
+  ta.setRangeText(replacement, pos, pos, "end");
+  // Place cursor on the line after <hr>
+  const cursor = pos + prefix.length + 4 + suffix.length;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Insert a line break at the cursor */
+export function insertBr(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const pos = ta.selectionStart;
+  ta.setRangeText("<br>", pos, ta.selectionEnd, "end");
+  // Place cursor after <br>
+  const cursor = pos + 4;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}

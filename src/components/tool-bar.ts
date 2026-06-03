@@ -1,6 +1,6 @@
 import { WolComponent, html, define } from "wolfe";
 import { save as saveHistory, undo, redo, canUndo, canRedo } from "../lib/history.ts";
-import { insertInline, wrapBlock, wrapList, getEditor } from "../lib/tag-insert.ts";
+import { insertInline, wrapBlock, wrapList, insertHr, insertBr, getEditor } from "../lib/tag-insert.ts";
 
 const ICONS: Record<string, string> = {
   bold:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -9,8 +9,12 @@ const ICONS: Record<string, string> = {
   strikethrough: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.3 4.9c-2.3-.6-4.4-1-6.2-.9-2.7 0-5.3.7-5.3 3.6 0 1.5 1.8 3.3 6.4 3.9h.1m6.9 3.7c.3.4.4.8.4 1.3 0 2.9-2.7 3.6-6.3 3.6-2.6 0-5.1-.6-6.8-1.3"/><line x1="4" y1="11.9" x2="20" y2="11.9"/></svg>`,
   undo:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>`,
   redo:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>`,
+  sub:           `<svg width="15" height="15" viewBox="0 0 24 24"><text x="12" y="18" text-anchor="middle" font-size="18" font-weight="700" fill="currentColor">A<tspan font-size="9" dy="4">2</tspan></text></svg>`,
+  sup:           `<svg width="15" height="15" viewBox="0 0 24 24"><text x="12" y="18" text-anchor="middle" font-size="18" font-weight="700" fill="currentColor">A<tspan font-size="9" dy="-6">2</tspan></text></svg>`,
   ul:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>`,
   ol:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="3" y="9" font-size="8" fill="currentColor" stroke="none">1</text><text x="3" y="15" font-size="8" fill="currentColor" stroke="none">2</text><text x="3" y="21" font-size="8" fill="currentColor" stroke="none">3</text></svg>`,
+  hr:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
+  br:            `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7v4H5"/><polyline points="9 7 5 11 9 15"/></svg>`,
 };
 
 @define("tool-bar")
@@ -99,6 +103,8 @@ export class ToolBar extends WolComponent {
     row.appendChild(mkBtn("italic",        "Italic (Ctrl+I)",         () => { saveHistory(getEditor()?.value ?? ""); insertInline("<em>",     "</em>");     }));
     row.appendChild(mkBtn("underline",     "Underline (Ctrl+U)",      () => { saveHistory(getEditor()?.value ?? ""); insertInline("<u>",      "</u>");      }));
     row.appendChild(mkBtn("strikethrough", "Strikethrough (Ctrl+⇧X)", () => { saveHistory(getEditor()?.value ?? ""); insertInline("<s>",      "</s>");      }));
+    row.appendChild(mkBtn("sub",           "Subscript",                () => { saveHistory(getEditor()?.value ?? ""); insertInline("<sub>",    "</sub>");    }));
+    row.appendChild(mkBtn("sup",           "Superscript",              () => { saveHistory(getEditor()?.value ?? ""); insertInline("<sup>",    "</sup>");    }));
     row.appendChild(sep());
 
     // ── Block buttons ─────────────────────────────────────────────────────
@@ -137,6 +143,9 @@ export class ToolBar extends WolComponent {
     // ── Lists ─────────────────────────────────────────────────────────────
     row.appendChild(mkBtn("ul", "Unordered list", () => { saveHistory(getEditor()?.value ?? ""); wrapList("ul"); }));
     row.appendChild(mkBtn("ol", "Ordered list",   () => { saveHistory(getEditor()?.value ?? ""); wrapList("ol"); }));
+    row.appendChild(sep());
+    row.appendChild(mkBtn("hr", "Horizontal rule", () => { saveHistory(getEditor()?.value ?? ""); insertHr(); }));
+    row.appendChild(mkBtn("br", "Line break",      () => { saveHistory(getEditor()?.value ?? ""); insertBr(); }));
 
     // ── Spacer ────────────────────────────────────────────────────────────
     const spacer = document.createElement("div");
