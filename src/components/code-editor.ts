@@ -46,6 +46,12 @@ export class CodeEditor extends WolComponent {
         e.preventDefault();
         this._insert("  ", "");
       }
+
+      // Alt+Enter → jump past closing tag, new line below
+      if (e.altKey && e.key === "Enter") {
+        e.preventDefault();
+        this._jumpOut();
+      }
     });
   }
 
@@ -83,6 +89,28 @@ export class CodeEditor extends WolComponent {
     ta.selectionStart = start + openTag.length;
     ta.selectionEnd = start + openTag.length + selected.length;
     ta.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  /** Alt+Enter: jump to next line, create one if at the end */
+  private _jumpOut() {
+    const ta = this.find<HTMLTextAreaElement>("textarea")!;
+    const pos = ta.selectionStart;
+    const text = ta.value;
+
+    const nextNewline = text.indexOf("\n", pos);
+    if (nextNewline !== -1) {
+      // Jump to start of next line
+      const cursor = nextNewline + 1;
+      ta.selectionStart = cursor;
+      ta.selectionEnd = cursor;
+    } else {
+      // At the end — create new line
+      ta.setRangeText("\n", text.length, text.length, "end");
+      const cursor = text.length + 1;
+      ta.selectionStart = cursor;
+      ta.selectionEnd = cursor;
+      ta.dispatchEvent(new Event("input", { bubbles: true }));
+    }
   }
 
   protected render() {
