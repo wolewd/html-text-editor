@@ -18,17 +18,19 @@ export class HtmlArea extends WolComponent {
       this._state = s as EditorState;
       this.update();
     });
-    return () => { this._unsub?.(); this._unsub = null; };
+    return () => { this._unsub?.(); };
   }
 
   protected render() {
-    const s = this._state;
+    const { showHtml, html: rawHtml } = this._state;
     return html`
-      <div class=${s.showHtml ? "absolute right-0 top-0 bottom-0 w-96 border-l border-stone-200 dark:border-stone-800 flex flex-col bg-stone-100 dark:bg-stone-950 z-10" : "hidden"}>
-        <div class="flex items-center justify-between px-3 py-2 border-b border-stone-200 dark:border-stone-800 flex-shrink-0">
-          <span class="text-[10px] font-mono text-stone-500 dark:text-stone-400 font-medium tracking-widest uppercase">HTML Output</span>
+      <div class=${showHtml
+        ? "absolute right-0 top-0 bottom-0 w-96 border-l border-stone-200 dark:border-stone-800 flex flex-col bg-stone-100 dark:bg-stone-950 z-10"
+        : "hidden"}>
+        <div class="flex items-center px-3 py-2 border-b border-stone-200 dark:border-stone-800 flex-shrink-0">
+          <span class="text-[10px] font-mono text-stone-400 dark:text-stone-500 tracking-widest uppercase">HTML Output</span>
         </div>
-        <pre class="flex-1 overflow-auto text-xs text-green-400 font-mono p-3 whitespace-pre-wrap break-all leading-relaxed">${preprocess(s.html)}</pre>
+        <pre class="flex-1 overflow-auto text-xs text-green-400 dark:text-green-500 font-mono p-4 whitespace-pre-wrap break-all leading-relaxed">${preprocess(rawHtml)}</pre>
       </div>
     `;
   }

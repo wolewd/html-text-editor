@@ -1,7 +1,7 @@
-const MAX = 50;
+const MAX = 100;
 
-let undone: string[] = [];
-let redone: string[] = [];
+let stack: string[] = [];
+let index = -1;
 
 function ed(): HTMLElement | null {
   return document.getElementById("wol-editor");
@@ -10,30 +10,41 @@ function ed(): HTMLElement | null {
 export function save() {
   const el = ed();
   if (!el) return;
-  undone.push(el.innerHTML);
-  if (undone.length > MAX) undone.shift();
-  redone = [];
+
+  const html = el.innerHTML;
+
+  // Don't save duplicate consecutive states
+  if (stack[index] === html) return;
+
+  // Discard any redo states ahead
+  stack = stack.slice(0, index + 1);
+  stack.push(html);
+  if (stack.length > MAX) stack.shift();
+  index = stack.length - 1;
 }
 
 export function undo() {
-  if (undone.length <= 1) return;
+  if (index <= 0) return;
   const el = ed();
   if (!el) return;
-  redone.push(undone.pop()!);
-  el.innerHTML = undone[undone.length - 1]!;
+  index--;
+  el.innerHTML = stack[index]!;
   placeCursorAtEnd(el);
-  el.dispatchEvent(new InputEvent("input", { bubbles: true }));
+  el.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: false }));
 }
 
 export function redo() {
-  if (!redone.length) return;
+  if (index >= stack.length - 1) return;
   const el = ed();
   if (!el) return;
-  undone.push(redone.pop()!);
-  el.innerHTML = undone[undone.length - 1]!;
+  index++;
+  el.innerHTML = stack[index]!;
   placeCursorAtEnd(el);
-  el.dispatchEvent(new InputEvent("input", { bubbles: true }));
+  el.dispatchEvent(new InputEvent("input", { bubbles: true, cancelable: false }));
 }
+
+export function canUndo() { return index > 0; }
+export function canRedo() { return index < stack.length - 1; }
 
 function placeCursorAtEnd(el: HTMLElement) {
   el.focus();

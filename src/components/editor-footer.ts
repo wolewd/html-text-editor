@@ -17,17 +17,17 @@ export class EditorFooter extends WolComponent {
       this._state = s as EditorState;
       this.update();
     });
-    return () => { this._unsub?.(); this._unsub = null; };
+    return () => { this._unsub?.(); };
   }
 
   protected render() {
-    const s = this._state;
+    const { wordCount, charCount } = this._state;
     return html`
-      <footer class="flex items-center justify-end px-5 py-2 flex-shrink-0 border-t border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 text-xs text-stone-400 dark:text-stone-500 font-mono">
+      <footer class="flex items-center justify-end px-5 py-2 flex-shrink-0 border-t border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 text-xs text-stone-400 dark:text-stone-500 font-mono select-none">
         <div class="flex items-center gap-3">
-          <span>${s.wordCount} words</span>
+          <span>${wordCount} words</span>
           <span class="text-stone-300 dark:text-stone-700">·</span>
-          <span>${s.charCount} chars</span>
+          <span>${charCount} chars</span>
         </div>
       </footer>
     `;

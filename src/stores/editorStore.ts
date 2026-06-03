@@ -4,7 +4,6 @@ export type EditorState = {
   html: string;
   wordCount: number;
   charCount: number;
-  dark: boolean;
   showHtml: boolean;
 };
 
@@ -12,18 +11,16 @@ export const editorStore = new Store<EditorState>({
   html: "",
   wordCount: 0,
   charCount: 0,
-  dark: false,
-  showHtml: true,
+  showHtml: false,
 });
 
 export function updateStats(el: HTMLElement) {
-  if (el.innerHTML === "<p><br></p>") {
-    editorStore.setState({ wordCount: 0, charCount: 0 });
-    return;
-  }
   const text = el.innerText ?? "";
-  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
-  editorStore.setState({ wordCount: words, charCount: text.length });
+  const isEmpty = !text.trim() || text.trim() === "\n";
+  editorStore.setState({
+    wordCount: isEmpty ? 0 : text.trim().split(/\s+/).length,
+    charCount: isEmpty ? 0 : text.replace(/\n/g, "").length,
+  });
 }
 
 export function saveHtml(el: HTMLElement) {

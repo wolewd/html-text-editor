@@ -1,93 +1,94 @@
 import { WolComponent, html, define } from "wolfe";
 import { updateStats, saveHtml } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo } from "../lib/history.ts";
-import { format, isApplyingBlock } from "../lib/format.ts";
+import { format } from "../lib/format.ts";
+
+const EMPTY_STATES = new Set(["", "<br>", "<div><br></div>"]);
+
+function isEditorEmpty(innerHTML: string): boolean {
+  return EMPTY_STATES.has(innerHTML.trim());
+}
 
 @define("write-area")
 export class WriteArea extends WolComponent {
   protected override onMount() {
-    const editorEl = this.find<HTMLElement>("#wol-editor")!;
+    const el = this.find<HTMLElement>("#wol-editor")!;
 
-    if (!editorEl.innerHTML.trim() || editorEl.innerHTML === "<br>") {
-      editorEl.innerHTML = "<p><br></p>";
-    }
+    // Boot state
+    el.innerHTML = "<p><br></p>";
     saveHistory();
-    editorEl.focus();
+    el.focus();
 
-    editorEl.addEventListener("input", (e) => {
-      // Normalize <div> → <p>
-      for (const div of Array.from(editorEl.querySelectorAll(":scope > div"))) {
-        const p = document.createElement("p");
-        while (div.firstChild) p.appendChild(div.firstChild);
-        div.replaceWith(p);
+    el.addEventListener("input", (e) => {
+      if (!e.isTrusted) return;
+
+      // Normalize bare <br> or empty div → clean paragraph
+      if (isEditorEmpty(el.innerHTML)) {
+        el.innerHTML = "<p><br></p>";
+        placeCursor(el.querySelector("p")!);
       }
 
-      if (e.isTrusted) saveHistory();
-
-      const h = editorEl.innerHTML;
-      if (!isApplyingBlock() && (h === "<br>" || h === "")) {
-        editorEl.innerHTML = "<p><br></p>";
-      }
-
-      updateStats(editorEl);
-      saveHtml(editorEl);
+      saveHistory();
+      updateStats(el);
+      saveHtml(el);
+      document.dispatchEvent(new CustomEvent("wolfe:format-change"));
     });
 
-    editorEl.addEventListener("keydown", (e) => {
-      const ev = e as KeyboardEvent;
+    el.addEventListener("keydown", (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
 
-      if (ev.key === "Enter" && !ev.shiftKey) {
-        const sel = window.getSelection();
-        if (sel?.rangeCount) {
-          let node: Node | null = sel.getRangeAt(0).commonAncestorContainer;
-          while (node && node.nodeType !== Node.ELEMENT_NODE) node = node.parentNode;
-          const h = (node as HTMLElement)?.closest?.("h1,h2,h3,h4,h5,h6");
-          if (h) {
-            ev.preventDefault();
-            const next = document.createElement(h.tagName.toLowerCase());
-            next.innerHTML = "<br>";
-            h.after(next);
-            const nr = document.createRange();
-            nr.selectNodeContents(next);
-            nr.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(nr);
-            return;
-          }
+      if (ctrl && !e.shiftKey) {
+        switch (e.key) {
+          case "b": e.preventDefault(); saveHistory(); format("bold");          return;
+          case "i": e.preventDefault(); saveHistory(); format("italic");        return;
+          case "u": e.preventDefault(); saveHistory(); format("underline");     return;
+          case "z": e.preventDefault(); undo();                                 return;
+          case "y": e.preventDefault(); redo();                                 return;
         }
       }
-
-      const ctrl = ev.ctrlKey || ev.metaKey;
-      if (ctrl && !ev.shiftKey) {
-        switch (ev.key) {
-          case "b": ev.preventDefault(); saveHistory(); format("bold"); break;
-          case "i": ev.preventDefault(); saveHistory(); format("italic"); break;
-          case "u": ev.preventDefault(); saveHistory(); format("underline"); break;
-          case "z": ev.preventDefault(); undo(); break;
-          case "y": ev.preventDefault(); redo(); break;
-        }
-        document.dispatchEvent(new CustomEvent("wolfe:format-change"));
-      }
-      if (ctrl && ev.shiftKey && ev.key === "X") {
-        ev.preventDefault();
+      if (ctrl && e.shiftKey && e.key === "X") {
+        e.preventDefault();
         saveHistory();
         format("strikethrough");
-        document.dispatchEvent(new CustomEvent("wolfe:format-change"));
       }
     });
+
+    // Sync toolbar on selection change
+    el.addEventListener("keyup",        () => dispatch("wolfe:format-change"));
+    el.addEventListener("mouseup",      () => dispatch("wolfe:format-change"));
+    el.addEventListener("focus",        () => dispatch("wolfe:format-change"));
   }
 
-  // render() is static — never changes, so patch() is a no-op every time.
-  // write-area never calls update(), so this only ever runs once.
   protected render() {
     return html`
       <div class="w-full h-full overflow-y-auto p-8 bg-stone-50 dark:bg-stone-950">
         <div
           id="wol-editor"
           contenteditable="true"
-          class="focus:outline-none min-h-[calc(100%-2rem)] max-w-4xl mx-auto shadow bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 font-sans text-base text-stone-800 dark:text-stone-100 leading-relaxed p-12"
+          class="focus:outline-none min-h-[calc(100%-2rem)] max-w-4xl mx-auto shadow-sm bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 font-sans text-base text-stone-800 dark:text-stone-100 leading-relaxed p-12
+            [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:leading-tight [&_h1]:tracking-tight [&_h1]:mt-8 [&_h1]:mb-3 [&_h1]:text-stone-900 dark:[&_h1]:text-stone-50
+            [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:leading-tight [&_h2]:tracking-tight [&_h2]:mt-7 [&_h2]:mb-2.5 [&_h2]:text-stone-900 dark:[&_h2]:text-stone-50
+            [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:leading-snug [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-stone-800 dark:[&_h3]:text-stone-100
+            [&_h4]:text-xl [&_h4]:font-semibold [&_h4]:leading-snug [&_h4]:mt-5 [&_h4]:mb-2 [&_h4]:text-stone-800 dark:[&_h4]:text-stone-100
+            [&_h5]:text-lg [&_h5]:font-medium [&_h5]:leading-normal [&_h5]:mt-4 [&_h5]:mb-1.5 [&_h5]:text-stone-700 dark:[&_h5]:text-stone-200
+            [&_h6]:text-base [&_h6]:font-medium [&_h6]:leading-normal [&_h6]:mt-4 [&_h6]:mb-1.5 [&_h6]:text-stone-500 dark:[&_h6]:text-stone-400
+            [&_p]:my-1"
         ></div>
       </div>
     `;
   }
+}
+
+function placeCursor(node: Node) {
+  const sel = window.getSelection();
+  if (!sel) return;
+  const r = document.createRange();
+  r.setStart(node, 0);
+  r.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(r);
+}
+
+function dispatch(name: string) {
+  document.dispatchEvent(new CustomEvent(name));
 }
