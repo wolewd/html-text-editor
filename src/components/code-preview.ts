@@ -6,9 +6,8 @@ function wrapHtml(source: string): string {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<script src="https://cdn.tailwindcss.com?plugins=typography"><\/script>
 </head>
-<body class="prose max-w-2xl mx-auto my-8 px-6 bg-white text-stone-900">${source}</body>
+<body>${source}</body>
 </html>`;
 }
 
@@ -44,7 +43,7 @@ export class CodePreview extends WolComponent {
     return html`
       <iframe
         class="w-full h-full border-0 bg-white"
-        sandbox="allow-same-origin allow-scripts"
+        sandbox="allow-scripts"
         title="HTML Preview"
       ></iframe>
     `;
