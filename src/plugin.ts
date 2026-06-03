@@ -6,6 +6,12 @@ const STYLE = "__CSS_INLINE__";
   style.id = "wysiwyg-css";
   style.textContent = STYLE;
   document.head.appendChild(style);
+
+  // Restore theme from localStorage or OS preference
+  const theme = localStorage.getItem("wolfe:theme");
+  if (theme === "dark" || (!theme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+    document.documentElement.classList.add("dark");
+  }
 })();
 
 import { WolComponent, html, define } from "wolfe";

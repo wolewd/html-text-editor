@@ -23,12 +23,15 @@ export class TextEditor extends WolComponent {
   protected render() {
     const show = this._showPreview;
     const panelClass = `absolute right-0 top-0 bottom-0 w-2xl max-w-full border-l border-stone-200 dark:border-stone-800 shadow-lg flex flex-col bg-white dark:bg-stone-900 transition-all duration-300 ease-in-out ${show ? 'translate-x-0' : 'translate-x-full'}`;
+    const editorStyle = `padding-right: ${show ? '42rem' : '0'}`;
     return html`
       <div class="flex flex-col h-screen overflow-hidden font-mono bg-stone-50 dark:bg-stone-950">
         <title-bar></title-bar>
         <tool-bar></tool-bar>
         <div class="flex-1 overflow-hidden relative">
-          <code-editor class="block w-full h-full"></code-editor>
+          <div class="h-full transition-all duration-300 ease-in-out" style=${editorStyle}>
+            <code-editor class="block w-full h-full"></code-editor>
+          </div>
           <div
             class=${panelClass}
           >

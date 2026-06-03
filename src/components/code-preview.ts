@@ -13,16 +13,13 @@ export class CodePreview extends WolComponent {
   }
 
   protected override onMount() {
-    this._unsub = editorStore.subscribe((s) => {
-      this._state = s;
-      this.update();
+    // Read directly from textarea DOM on every store update
+    this._unsub = editorStore.subscribe(() => {
+      const ta = document.getElementById("wol-code-editor") as HTMLTextAreaElement | null;
+      const el = this.find<HTMLDivElement>("#preview-output");
+      if (el && ta) el.innerHTML = ta.value;
     });
     return () => { this._unsub?.(); };
-  }
-
-  protected override onUpdate() {
-    const el = this.find<HTMLDivElement>("#preview-output");
-    if (el) el.innerHTML = this._state.html;
   }
 
   protected render() {

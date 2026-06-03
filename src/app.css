@@ -29,6 +29,58 @@ body {
 .dark .hl-value { color: var(--color-green-400); }
 .dark .hl-comment { color: var(--color-stone-500); }
 
+/* Visible scrollbar for transparent textarea */
+#wol-code-editor {
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-stone-400) var(--color-stone-100);
+}
+#wol-code-editor::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+#wol-code-editor::-webkit-scrollbar-track {
+  background: var(--color-stone-100);
+}
+#wol-code-editor::-webkit-scrollbar-thumb {
+  background: var(--color-stone-400);
+  border-radius: 4px;
+}
+.dark #wol-code-editor {
+  scrollbar-color: var(--color-stone-500) var(--color-stone-800);
+}
+.dark #wol-code-editor::-webkit-scrollbar-track {
+  background: var(--color-stone-800);
+}
+.dark #wol-code-editor::-webkit-scrollbar-thumb {
+  background: var(--color-stone-500);
+}
+
+/* Consistent scrollbar for preview */
+#preview-output {
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-stone-400) var(--color-stone-100);
+}
+#preview-output::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+#preview-output::-webkit-scrollbar-track {
+  background: var(--color-stone-100);
+}
+#preview-output::-webkit-scrollbar-thumb {
+  background: var(--color-stone-400);
+  border-radius: 4px;
+}
+.dark #preview-output {
+  scrollbar-color: var(--color-stone-500) var(--color-stone-800);
+}
+.dark #preview-output::-webkit-scrollbar-track {
+  background: var(--color-stone-800);
+}
+.dark #preview-output::-webkit-scrollbar-thumb {
+  background: var(--color-stone-500);
+}
+
 @layer components {
   .prose {
     color: var(--color-stone-700);

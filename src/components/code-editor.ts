@@ -4,6 +4,7 @@ import { save as saveHistory, undo, redo, reset as resetHistory } from "../lib/h
 import { getEditor, insertInline } from "../lib/tag-insert.ts";
 
 const STORAGE_KEY = "wolfe:editor-html";
+const CARET_KEY = "wolfe:editor-caret";
 
 const COLORS: Record<string, string> = {
   html:   "#e06c75",
@@ -83,6 +84,30 @@ export class CodeEditor extends WolComponent {
     resetHistory(initial);
     saveHtml(initial);
     updateStats(initial);
+
+    // Restore cursor/scroll position
+    try {
+      const caret = JSON.parse(localStorage.getItem(CARET_KEY) || "{}");
+      ta.selectionStart = caret.selectionStart ?? (saved ? ta.value.length : 0);
+      ta.selectionEnd = caret.selectionEnd ?? (saved ? ta.value.length : 0);
+      ta.scrollTop = caret.scrollTop ?? 0;
+      if (this._highlightEl) this._highlightEl.scrollTop = ta.scrollTop;
+    } catch {}
+
+    // Save cursor on blur, click, and keyup (captures exact cursor position)
+    const saveCaret = () => {
+      try {
+        localStorage.setItem(CARET_KEY, JSON.stringify({
+          selectionStart: ta.selectionStart,
+          selectionEnd: ta.selectionEnd,
+          scrollTop: ta.scrollTop,
+        }));
+      } catch {}
+    };
+    ta.addEventListener("mouseup", saveCaret);
+    ta.addEventListener("keyup", saveCaret);
+    ta.addEventListener("blur", saveCaret);
+
     ta.focus();
 
     ta.addEventListener("input", () => {
@@ -92,7 +117,9 @@ export class CodeEditor extends WolComponent {
       saveHtml(value);
       updateStats(value);
       if (this._saveTimer) clearTimeout(this._saveTimer);
-      this._saveTimer = setTimeout(() => localStorage.setItem(STORAGE_KEY, value), 500);
+      this._saveTimer = setTimeout(() => {
+        localStorage.setItem(STORAGE_KEY, value);
+      }, 500);
     });
 
     ta.addEventListener("scroll", () => {
@@ -141,13 +168,13 @@ export class CodeEditor extends WolComponent {
       <div class="relative w-full h-full bg-white dark:bg-stone-900">
         <pre
           id="wol-highlight"
-          class="absolute inset-0 font-mono text-sm leading-relaxed p-6 whitespace-pre-wrap break-words overflow-auto pointer-events-none border-0 border-r border-stone-200 dark:border-stone-800"
+          class="absolute inset-0 font-mono text-sm leading-relaxed p-6 whitespace-pre-wrap break-words overflow-hidden pointer-events-none border-0 border-r border-stone-200 dark:border-stone-800"
           aria-hidden="true"
         ></pre>
         <textarea
           id="wol-code-editor"
           spellcheck="false"
-          class="relative w-full h-full resize-none bg-transparent text-transparent caret-stone-700 dark:caret-stone-300 font-mono text-sm leading-relaxed p-6 border-0 border-r border-stone-200 dark:border-stone-800 outline-none selection:bg-stone-200/50 dark:selection:bg-stone-700/50"
+          class="relative w-full h-full resize-none bg-transparent text-transparent caret-stone-700 dark:caret-stone-300 font-mono text-sm leading-relaxed p-6 border-0 border-r border-stone-200 dark:border-stone-800 outline-none overflow-auto selection:bg-stone-200/50 dark:selection:bg-stone-700/50"
           placeholder="<p>Start writing HTML...</p>"
         ></textarea>
       </div>
