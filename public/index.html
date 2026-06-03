@@ -11,55 +11,18 @@
         theme: {
           extend: {
             fontFamily: {
-              mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-              serif: ['Georgia', 'Cambria', 'serif'],
+              mono: ['"IBM Plex Mono"', 'monospace'],
+              sans: ['"IBM Plex Sans"', 'sans-serif'],
             }
           }
         }
       }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-      /* contenteditable prose styles — can't be done via Tailwind utility classes on dynamic content */
-      [contenteditable] { outline: none; }
-      [contenteditable] h1 { font-size: 2em; font-weight: 700; margin: 0.67em 0; line-height: 1.2; }
-      [contenteditable] h2 { font-size: 1.5em; font-weight: 600; margin: 0.75em 0; line-height: 1.3; }
-      [contenteditable] h3 { font-size: 1.25em; font-weight: 600; margin: 0.83em 0; line-height: 1.4; }
-      [contenteditable] p { margin: 0.5em 0; line-height: 1.7; }
-      [contenteditable] ul { list-style-type: disc; padding-left: 1.5em; margin: 0.5em 0; }
-      [contenteditable] ol { list-style-type: decimal; padding-left: 1.5em; margin: 0.5em 0; }
-      [contenteditable] li { margin: 0.25em 0; line-height: 1.7; }
-      [contenteditable] blockquote { border-left: 3px solid #6366f1; padding-left: 1em; margin: 1em 0; color: #6b7280; font-style: italic; }
-      [contenteditable] pre { background: #1e1e2e; color: #cdd6f4; padding: 1em; border-radius: 6px; overflow-x: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.875em; margin: 0.75em 0; }
-      [contenteditable] code { background: #f3f4f6; color: #7c3aed; padding: 0.15em 0.4em; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 0.875em; }
-      [contenteditable] pre code { background: transparent; color: inherit; padding: 0; }
-      [contenteditable] a { color: #6366f1; text-decoration: underline; }
-      [contenteditable] hr { border: none; border-top: 2px solid #e5e7eb; margin: 1.5em 0; }
-      [contenteditable] table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-      [contenteditable] td, [contenteditable] th { border: 1px solid #d1d5db; padding: 0.5em 0.75em; }
-      [contenteditable] th { background: #f9fafb; font-weight: 600; }
-      [contenteditable][data-placeholder]:empty::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
-
-      .dark [contenteditable] blockquote { border-left-color: #818cf8; color: #9ca3af; }
-      .dark [contenteditable] code { background: #1e1e2e; color: #a78bfa; }
-      .dark [contenteditable] hr { border-top-color: #374151; }
-      .dark [contenteditable] td, .dark [contenteditable] th { border-color: #374151; }
-      .dark [contenteditable] th { background: #1f2937; }
-
-      .toolbar-btn.active { background-color: #6366f1 !important; color: white !important; }
-      .toolbar-btn.active svg { stroke: white !important; }
-
-      /* Floating toolbar */
-      #bubble-toolbar { display: none; position: fixed; z-index: 9999; }
-      #bubble-toolbar.visible { display: flex; }
-
-      /* Smooth transitions */
-      * { transition: background-color 0.15s, color 0.15s, border-color 0.15s; }
-      [contenteditable] * { transition: none; }
-    </style>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
   </head>
-  <body class="light bg-white text-gray-900 min-h-screen">
+  <body class="bg-stone-50 text-stone-900 min-h-screen font-mono transition-colors duration-150">
     <div id="app"></div>
     <script src="/app.js"></script>
   </body>

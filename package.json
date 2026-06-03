@@ -10,7 +10,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "wolfe": "git+ssh://git@github.com/wolewd/wolfe.git"
+    "wolfe": "git+ssh://git@github.com/wolewd/wolfe.git#development"
   },
   "scripts": {
     "dev": "bun run index.ts --dev",

@@ -1,15 +1,14 @@
 import { WolComponent, html, define, router } from "wolfe";
-import { el } from "wolfe/utils";
-import "./components/editor.ts";
+import "./pages/text-editor.ts";
 
 @define("app-root")
 class AppRoot extends WolComponent {
   protected render() {
-    return html`<wolfe-editor></wolfe-editor>`;
+    return html`<text-editor></text-editor>`;
   }
 }
 
-const outlet = el("app");
+const outlet = document.getElementById("app")!;
 router.add({ path: "/", tag: "app-root", title: "WolFe Editor" });
 router.missing({ tag: "app-root", title: "WolFe Editor" });
 router.init({ outlet, appName: "WolFe Editor" });

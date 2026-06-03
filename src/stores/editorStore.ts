@@ -21,7 +21,7 @@ export const editorStore = new Store<EditorState>({
   wordCount: 0,
   charCount: 0,
   dark: false,
-  showHtml: false,
+  showHtml: true,
   showLinkModal: false,
   showTableModal: false,
   pendingUrl: "",
@@ -37,12 +37,12 @@ export function toggleDark() {
     const next = !prev.dark;
     if (next) {
       document.documentElement.classList.add("dark");
-      document.body.classList.add("dark", "bg-gray-950", "text-gray-100");
-      document.body.classList.remove("bg-white", "text-gray-900");
+      document.body.classList.add("dark", "bg-stone-950", "text-stone-100");
+      document.body.classList.remove("bg-stone-50", "text-stone-900");
     } else {
       document.documentElement.classList.remove("dark");
-      document.body.classList.remove("dark", "bg-gray-950", "text-gray-100");
-      document.body.classList.add("bg-white", "text-gray-900");
+      document.body.classList.remove("dark", "bg-stone-950", "text-stone-100");
+      document.body.classList.add("bg-stone-50", "text-stone-900");
     }
     return { dark: next };
   });
