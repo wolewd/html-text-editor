@@ -28,18 +28,51 @@ export function insertInline(openTag: string, closeTag: string): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Wrap the current line(s) in block-level tags */
+/** Wrap the current line(s) in block-level tags.
+ * If already inside a heading, replaces the tag instead. */
 export function wrapBlock(tag: string): void {
   const ta = getEditor();
   if (!ta) return;
   ta.focus();
 
-  const start = ta.selectionStart;
-  const end = ta.selectionEnd;
+  const pos = ta.selectionStart;
   const text = ta.value;
 
-  // Find line boundaries
-  const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+  // ── Check if we're inside an existing heading ─────────────────────────
+  const heading = findEnclosingHeading(text, pos);
+  if (heading) {
+    replaceHeading(ta, text, heading, tag);
+    return;
+  }
+
+  // ── Check if cursor is inside a <p> tag ──────────────────────────────
+  const pTag = findEnclosingTag(text, pos, "p");
+  if (pTag) {
+    replaceHeading(ta, text, pTag, tag);
+    return;
+  }
+
+  // ── Check if the current line is already a block tag (<p> or heading) ─
+  const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+  const lineEnd = text.indexOf("\n", pos);
+  const lineContent = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
+
+  // Match: <p>content</p> or <hN>content</hN>
+  const lineBlock = lineContent.match(/^<(p|h[1-6])>(.*)<\/\1>$/);
+  if (lineBlock) {
+    const inner = lineBlock[2]!;
+    const replacement = `<${tag}>${inner}</${tag}>`;
+    ta.setRangeText(replacement, lineStart, lineStart + lineContent.length, "end");
+    const cursor = lineStart + tag.length + 2;
+    ta.selectionStart = cursor;
+    ta.selectionEnd = cursor;
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+
+  // ── Not inside a heading — wrap current line ──────────────────────────
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
   const lineEndIdx = text.indexOf("\n", end);
   const actualEnd = lineEndIdx === -1 ? text.length : lineEndIdx;
 
@@ -47,11 +80,54 @@ export function wrapBlock(tag: string): void {
   const wrapped = `<${tag}>${content}</${tag}>`;
 
   ta.setRangeText(wrapped, lineStart, actualEnd, "end");
-  // Place cursor inside, right after the opening tag
-  const cursor = lineStart + tag.length + 2; // after <tag>
+  const cursor = lineStart + tag.length + 2;
   ta.selectionStart = cursor;
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function replaceHeading(ta: HTMLTextAreaElement, text: string, heading: { openStart: number; openEnd: number; closeStart: number; closeEnd: number }, tag: string): void {
+  const before = text.substring(0, heading.openStart);
+  const content = text.substring(heading.openEnd, heading.closeStart);
+  const after = text.substring(heading.closeEnd);
+  ta.value = `${before}<${tag}>${content}</${tag}>${after}`;
+  const cursor = heading.openStart + tag.length + 2;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Find the enclosing heading around `pos`, or null */
+function findEnclosingHeading(text: string, pos: number): { openStart: number; openEnd: number; closeStart: number; closeEnd: number } | null {
+  const before = text.substring(0, pos);
+  const after = text.substring(pos);
+
+  // Scan backwards for <h1> through <h6>
+  const m = before.match(/<h([1-6])>(?!.*<\/h\1>)/);
+  if (!m || m.index === undefined) return null;
+
+  const tag = `h${m[1]}`;
+  return findEnclosingTag(text, pos, tag);
+}
+
+/** Find enclosing <tag>...</tag> around `pos`, or null */
+function findEnclosingTag(text: string, pos: number, tag: string): { openStart: number; openEnd: number; closeStart: number; closeEnd: number } | null {
+  const before = text.substring(0, pos);
+  const after = text.substring(pos);
+
+  const openTag = `<${tag}>`;
+  const closeTag = `</${tag}>`;
+
+  // Use lastIndexOfUnclosed to find the last unclosed opening tag before cursor
+  const openStart = lastIndexOfUnclosed(before, openTag, closeTag);
+  if (openStart === -1) return null;
+
+  const openEnd = openStart + openTag.length;
+  const closeStart = after.indexOf(closeTag);
+  if (closeStart === -1) return null;
+  const closeEnd = pos + closeStart + closeTag.length;
+
+  return { openStart, openEnd, closeStart: pos + closeStart, closeEnd };
 }
 
 /** Wrap selected lines in a list (<ul> or <ol>).
