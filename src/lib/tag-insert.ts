@@ -258,12 +258,39 @@ export function insertBr(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a 2×2 table with header row at the cursor */
+/** Insert a table, or add a row if already inside one. */
 export function insertTable(): void {
   const ta = getEditor();
   if (!ta) return;
   ta.focus();
 
+  const pos = ta.selectionStart;
+  const text = ta.value;
+
+  // ── Check if we're inside an existing <table> ─────────────────────────
+  const before = text.substring(0, pos);
+  const after = text.substring(pos);
+  const tableOpen = lastIndexOfUnclosed(before, "<table>", "</table>");
+  if (tableOpen !== -1) {
+    // We're inside a table — add a new row before </table>
+    const tableClose = after.indexOf("</table>");
+    const tableEnd = tableClose === -1 ? pos + after.length : pos + tableClose;
+    const tableContent = text.substring(tableOpen, tableEnd);
+    // Count cells in the first <tr>
+    const firstRowMatch = tableContent.match(/<tr>([\s\S]*?)<\/tr>/);
+    const colCount = firstRowMatch ? ((firstRowMatch[1]!.match(/<td>/g) || []).length + (firstRowMatch[1]!.match(/<th>/g) || []).length) : 2;
+    const cells = Array(colCount).fill("    <td></td>").join("\n");
+    const newRow = `  <tr>\n${cells}\n  </tr>\n`;
+    const insertPos = tableEnd;
+    ta.setRangeText(newRow, insertPos, insertPos, "end");
+    const cursor = insertPos + 15; // after   <tr>\n    <td>
+    ta.selectionStart = cursor;
+    ta.selectionEnd = cursor;
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+    return;
+  }
+
+  // ── Not inside a table — insert a new table ───────────────────────────
   const tpl = [
     "<table>",
     "  <tr>",
@@ -274,17 +301,50 @@ export function insertTable(): void {
     "    <td></td>",
     "    <td></td>",
     "  </tr>",
-    "  <tr>",
-    "    <td></td>",
-    "    <td></td>",
-    "  </tr>",
     "</table>",
   ].join("\n");
 
-  const pos = ta.selectionStart;
   ta.setRangeText(tpl, pos, ta.selectionEnd, "end");
-  // Place cursor inside the first <td>
   const cursor = pos + tpl.indexOf("<td>") + 4;
+  ta.selectionStart = cursor;
+  ta.selectionEnd = cursor;
+  ta.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+/** Add a column to the enclosing table (inserts <th>/<td> before each </tr>) */
+export function insertTableColumn(): void {
+  const ta = getEditor();
+  if (!ta) return;
+  ta.focus();
+
+  const pos = ta.selectionStart;
+  const text = ta.value;
+
+  // Find enclosing <table>
+  const before = text.substring(0, pos);
+  const after = text.substring(pos);
+  const tableOpen = lastIndexOfUnclosed(before, "<table>", "</table>");
+  if (tableOpen === -1) return;
+
+  const tableClose = after.indexOf("</table>");
+  const tableEnd = tableClose === -1 ? pos + after.length : pos + tableClose;
+  const inside = text.substring(tableOpen, tableEnd);
+
+  // Replace each \n  </tr>: use <th> for rows with <th>, else <td>
+  const updated = inside.replace(/\n  <\/tr>/g, (match, offset) => {
+    const rowStart = inside.lastIndexOf("<tr>", offset);
+    const rowContent = rowStart !== -1 ? inside.substring(rowStart, offset) : "";
+    const isHeader = /<th>/.test(rowContent);
+    const cell = isHeader ? "    <th></th>" : "    <td></td>";
+    return `\n${cell}${match}`;
+  });
+  const replacement = text.substring(0, tableOpen) + updated + text.substring(tableEnd);
+
+  ta.value = replacement;
+  // Place cursor in the first new cell
+  const marker = updated.indexOf("    <td></td>");
+  const firstCell = marker !== -1 ? marker : updated.indexOf("    <th></th>");
+  const cursor = tableOpen + firstCell + 8;
   ta.selectionStart = cursor;
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
