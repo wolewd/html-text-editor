@@ -258,13 +258,19 @@ export function insertBr(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a new table at the cursor */
+/** Insert a new table at the cursor. Does nothing if already inside a table. */
 export function insertTable(): void {
   const ta = getEditor();
   if (!ta) return;
   ta.focus();
 
   const pos = ta.selectionStart;
+  const text = ta.value;
+
+  // Don't nest tables
+  const before = text.substring(0, pos);
+  if (lastIndexOfUnclosed(before, "<table>", "</table>") !== -1) return;
+
   const tpl = [
     "<table>",
     "  <tr>",
