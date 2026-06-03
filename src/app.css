@@ -2,6 +2,7 @@
 @variant dark (&:where(.dark, .dark *));
 
 @source "./**/*.ts";
+@source "./plugin.ts";
 @source "../public/**/*.html";
 
 body {

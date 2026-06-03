@@ -9,6 +9,7 @@ import { isPreviewShown, togglePreview } from "../stores/previewStore.ts";
 @define("text-editor")
 export class TextEditor extends WolComponent {
   private _showPreview = isPreviewShown();
+  // tailwind: translate-x-0 translate-x-full
 
   protected override onMount() {
     const handler = () => {
@@ -21,16 +22,15 @@ export class TextEditor extends WolComponent {
 
   protected render() {
     const show = this._showPreview;
+    const panelClass = `absolute right-0 top-0 bottom-0 w-2xl max-w-full border-l border-stone-200 dark:border-stone-800 shadow-lg flex flex-col bg-white dark:bg-stone-900 transition-all duration-300 ease-in-out ${show ? 'translate-x-0' : 'translate-x-full'}`;
     return html`
       <div class="flex flex-col h-screen overflow-hidden font-mono bg-stone-50 dark:bg-stone-950">
         <title-bar></title-bar>
         <tool-bar></tool-bar>
-        <div class="flex-1 overflow-hidden flex">
-          <div class="flex-1 overflow-hidden">
-            <code-editor class="block w-full h-full"></code-editor>
-          </div>
-          <div hidden=${!show}
-            class="w-2xl max-w-full border-l border-stone-200 dark:border-stone-800 shadow-lg flex flex-col bg-white dark:bg-stone-900 shrink-0"
+        <div class="flex-1 overflow-hidden relative">
+          <code-editor class="block w-full h-full"></code-editor>
+          <div
+            class=${panelClass}
           >
             <div class="flex items-center justify-between px-4 h-10 border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-800 shrink-0">
               <span class="text-[10px] font-mono text-stone-400 tracking-widest uppercase">Preview</span>

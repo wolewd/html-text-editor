@@ -1,5 +1,5 @@
 import { startDevServer, buildApp } from "wolfe/runtime";
-import { unlinkSync, existsSync, readFileSync, writeFileSync } from "fs";
+import { unlinkSync, existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
 
 const args = Bun.argv.slice(2);
 const port = 3000;
@@ -46,7 +46,40 @@ if (args.includes("--dev")) {
   await new Promise(() => {});
 }
 
+if (args.includes("--plugin")) {
+  deleteCSS();
+  const css = tailwind(["--minify"]);
+  await css.exited;
+
+  mkdirSync("dist", { recursive: true });
+  const cssContent = readFileSync(CSS_OUT, "utf-8");
+
+  const result = await Bun.build({
+    entrypoints: ["src/plugin.ts"],
+    outdir: "./dist",
+    naming: "[dir]/wysiwyg-editor.[ext]",
+    minify: true,
+    target: "browser",
+    format: "iife",
+  });
+
+  if (!result.success) {
+    for (const log of result.logs) console.error(log);
+    process.exit(1);
+  }
+
+  // Inject CSS into the JS bundle (JSON-escaped)
+  const jsPath = "dist/wysiwyg-editor.js";
+  let js = readFileSync(jsPath, "utf-8");
+  js = js.replace('"__CSS_INLINE__"', JSON.stringify(cssContent));
+  writeFileSync(jsPath, js);
+
+  console.log("[plugin] built → dist/wysiwyg-editor.js (CSS inlined)");
+  process.exit(0);
+}
+
 console.log("Usage:");
 console.log("  bun run index.ts --dev");
 console.log("  bun run index.ts --build");
+console.log("  bun run index.ts --plugin");
 process.exit(1);

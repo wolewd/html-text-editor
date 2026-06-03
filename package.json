@@ -16,6 +16,7 @@
   },
   "scripts": {
     "dev": "bun run index.ts --dev",
-    "build": "bun run index.ts --build"
+    "build": "bun run index.ts --build",
+    "plugin": "bun run index.ts --plugin"
   }
 }
