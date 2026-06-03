@@ -1,6 +1,7 @@
 import { WolComponent, html, define } from "wolfe";
 import { save as saveHistory, undo, redo, canUndo, canRedo } from "../lib/history.ts";
 import { insertInline, wrapBlock, wrapList, insertHr, insertBr, insertTable, insertTableColumn, insertTableRow, insertCodeBlock, insertLink, insertImage, insertVideo, getEditor } from "../lib/tag-insert.ts";
+import { toast } from "../lib/notifications.ts";
 
 const ICONS: Record<string, string> = {
   bold:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>`,
@@ -24,7 +25,6 @@ const ICONS: Record<string, string> = {
   image:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`,
   video:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>`,
   copy:          `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`,
-  check:         `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
   download:      `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
 };
 
@@ -184,12 +184,9 @@ export class ToolBar extends WolComponent {
     row.appendChild(sep());
     row.appendChild(mkBtn("copy", "Copy HTML",         () => { 
       navigator.clipboard.writeText(getEditor()?.value ?? "");
-      const btn = row.lastElementChild as HTMLButtonElement;
-      const orig = btn.innerHTML;
-      btn.innerHTML = ICONS.check!;
-      setTimeout(() => { btn.innerHTML = orig; }, 1500);
+      toast("Copied!");
     }));
-    row.appendChild(mkBtn("download", "Download HTML", () => { this._download(); }));
+    row.appendChild(mkBtn("download", "Download HTML", () => { this._download(); toast("Downloaded!"); }));
 
     // ── Spacer ────────────────────────────────────────────────────────────
     const spacer = document.createElement("div");

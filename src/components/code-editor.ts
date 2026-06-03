@@ -2,13 +2,18 @@ import { WolComponent, html, define } from "wolfe";
 import { updateStats, saveHtml } from "../stores/editorStore.ts";
 import { save as saveHistory, undo, redo, reset as resetHistory } from "../lib/history.ts";
 
+const STORAGE_KEY = "wolfe:editor-html";
+
 @define("code-editor")
 export class CodeEditor extends WolComponent {
+  private _saveTimer: ReturnType<typeof setTimeout> | null = null;
+
   protected override onMount() {
     const ta = this.find<HTMLTextAreaElement>("textarea")!;
 
-    // Seed with a starter paragraph
-    const initial = "<p>Start writing...</p>";
+    // Restore from localStorage or use starter
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const initial = saved ?? "<p>Start writing...</p>";
     ta.value = initial;
     resetHistory(initial);
     saveHtml(initial);
@@ -21,6 +26,9 @@ export class CodeEditor extends WolComponent {
       saveHistory(value);
       saveHtml(value);
       updateStats(value);
+      // Debounce localStorage write (500ms)
+      if (this._saveTimer) clearTimeout(this._saveTimer);
+      this._saveTimer = setTimeout(() => localStorage.setItem(STORAGE_KEY, value), 500);
     });
 
     // ── Keyboard shortcuts ────────────────────────────────────────────────
@@ -99,12 +107,10 @@ export class CodeEditor extends WolComponent {
 
     const nextNewline = text.indexOf("\n", pos);
     if (nextNewline !== -1) {
-      // Jump to start of next line
       const cursor = nextNewline + 1;
       ta.selectionStart = cursor;
       ta.selectionEnd = cursor;
     } else {
-      // At the end — create new line
       ta.setRangeText("\n", text.length, text.length, "end");
       const cursor = text.length + 1;
       ta.selectionStart = cursor;
