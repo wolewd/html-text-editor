@@ -383,16 +383,14 @@ export function insertLink(): void {
   if (!ta) return;
   ta.focus();
 
-  const url = prompt("URL:", "https://");
-  if (!url) return;
-
   const start = ta.selectionStart;
   const end = ta.selectionEnd;
   const selected = ta.value.substring(start, end) || "link";
-  const wrapped = `<a href="${url}">${selected}</a>`;
+  const wrapped = `<a href="">${selected}</a>`;
 
   ta.setRangeText(wrapped, start, end, "end");
-  const cursor = start + wrapped.length - 4; // before </a>
+  // Place cursor on href value
+  const cursor = start + 9; // after <a href="
   ta.selectionStart = cursor;
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
@@ -404,14 +402,11 @@ export function insertImage(): void {
   if (!ta) return;
   ta.focus();
 
-  const url = prompt("Image URL:", "https://");
-  if (!url) return;
-
-  const img = `<img src="${url}" alt="">`;
+  const img = `<img src="" alt="image">`;
   const pos = ta.selectionStart;
   ta.setRangeText(img, pos, ta.selectionEnd, "end");
-  // Place cursor on alt text
-  const cursor = pos + img.indexOf('alt="') + 5;
+  // Place cursor on src value
+  const cursor = pos + 10; // after <img src="
   ta.selectionStart = cursor;
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
@@ -423,13 +418,11 @@ export function insertVideo(): void {
   if (!ta) return;
   ta.focus();
 
-  const url = prompt("Video URL:", "https://");
-  if (!url) return;
-
-  const video = `<video src="${url}" controls></video>`;
+  const video = `<video src="" controls></video>`;
   const pos = ta.selectionStart;
   ta.setRangeText(video, pos, ta.selectionEnd, "end");
-  const cursor = pos + video.length;
+  // Place cursor on src value
+  const cursor = pos + 12; // after <video src="
   ta.selectionStart = cursor;
   ta.selectionEnd = cursor;
   ta.dispatchEvent(new Event("input", { bubbles: true }));
