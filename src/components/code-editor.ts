@@ -68,19 +68,33 @@ function highlight(html: string): string {
     );
 }
 
+function generateLineNumbers(text: string): string {
+  const lineCount = (text.match(/\n/g) || []).length + 1;
+  const nums: string[] = [];
+  for (let i = 1; i <= lineCount; i++) {
+    nums.push(String(i));
+  }
+  return nums.join("\n");
+}
+
 @define("code-editor")
 export class CodeEditor extends WolComponent {
   private _saveTimer: ReturnType<typeof setTimeout> | null = null;
   private _highlightEl: HTMLPreElement | null = null;
+  private _lineNumsEl: HTMLPreElement | null = null;
+  private _scrollWrapper: HTMLDivElement | null = null;
 
   protected override onMount() {
     const ta = this.find<HTMLTextAreaElement>("textarea")!;
     this._highlightEl = this.find<HTMLPreElement>("#wol-highlight")!;
+    this._lineNumsEl = this.find<HTMLPreElement>("#wol-linenums")!;
+    this._scrollWrapper = this.find<HTMLDivElement>("#wol-scroll")!;
 
     const saved = localStorage.getItem(STORAGE_KEY);
     const initial = saved ?? "<p>Start writing...</p>";
     ta.value = initial;
     this._highlightEl.innerHTML = highlight(initial);
+    this._lineNumsEl.textContent = generateLineNumbers(initial);
     resetHistory(initial);
     saveHtml(initial);
     updateStats(initial);
@@ -91,7 +105,9 @@ export class CodeEditor extends WolComponent {
       ta.selectionStart = caret.selectionStart ?? (saved ? ta.value.length : 0);
       ta.selectionEnd = caret.selectionEnd ?? (saved ? ta.value.length : 0);
       ta.scrollTop = caret.scrollTop ?? 0;
-      if (this._highlightEl) this._highlightEl.scrollTop = ta.scrollTop;
+      if (this._scrollWrapper) {
+        this._scrollWrapper.scrollTop = ta.scrollTop;
+      }
     } catch {}
 
     // Save cursor on blur, click, and keyup (captures exact cursor position)
@@ -113,6 +129,7 @@ export class CodeEditor extends WolComponent {
     ta.addEventListener("input", () => {
       const value = ta.value;
       this._highlightEl!.innerHTML = highlight(value);
+      this._lineNumsEl!.textContent = generateLineNumbers(value);
       saveHistory(value);
       saveHtml(value);
       updateStats(value);
@@ -123,9 +140,9 @@ export class CodeEditor extends WolComponent {
     });
 
     ta.addEventListener("scroll", () => {
-      if (this._highlightEl) {
-        this._highlightEl.scrollTop = ta.scrollTop;
-        this._highlightEl.scrollLeft = ta.scrollLeft;
+      if (this._scrollWrapper) {
+        this._scrollWrapper.scrollTop = ta.scrollTop;
+        this._scrollWrapper.scrollLeft = ta.scrollLeft;
       }
     });
 
@@ -157,24 +174,35 @@ export class CodeEditor extends WolComponent {
   }
 
   protected override onUpdate() {
-    // Sync highlight after toolbar inserts
+    // Sync highlight and line numbers after toolbar inserts
     const ta = this.find<HTMLTextAreaElement>("textarea");
     if (ta && this._highlightEl)
       this._highlightEl.innerHTML = highlight(ta.value);
+    if (ta && this._lineNumsEl)
+      this._lineNumsEl.textContent = generateLineNumbers(ta.value);
   }
 
   protected render() {
     return html`
       <div class="relative w-full h-full bg-white dark:bg-stone-900">
-        <pre
-          id="wol-highlight"
-          class="absolute inset-0 font-mono text-sm leading-relaxed p-6 whitespace-pre-wrap break-words overflow-hidden pointer-events-none border-0 border-r border-stone-200 dark:border-stone-800"
-          aria-hidden="true"
-        ></pre>
+        <div id="wol-scroll" class="absolute inset-0 overflow-auto pointer-events-none">
+          <div class="flex min-h-full">
+            <pre
+              id="wol-linenums"
+              class="w-12 font-mono text-sm leading-relaxed pt-6 pr-2 pb-6 text-right text-stone-300 dark:text-stone-600 select-none border-r border-stone-200 dark:border-stone-800 shrink-0"
+              aria-hidden="true"
+            ></pre>
+            <pre
+              id="wol-highlight"
+              class="flex-1 min-w-0 font-mono text-sm leading-relaxed pt-6 pr-6 pb-6 pl-2 whitespace-pre-wrap wrap-break-word"
+              aria-hidden="true"
+            ></pre>
+          </div>
+        </div>
         <textarea
           id="wol-code-editor"
           spellcheck="false"
-          class="relative w-full h-full resize-none bg-transparent text-transparent caret-stone-700 dark:caret-stone-300 font-mono text-sm leading-relaxed p-6 border-0 border-r border-stone-200 dark:border-stone-800 outline-none overflow-auto selection:bg-stone-200/50 dark:selection:bg-stone-700/50"
+          class="absolute inset-0 w-full h-full resize-none bg-transparent text-transparent caret-stone-700 dark:caret-stone-300 font-mono text-sm leading-relaxed p-6 pl-14 border-0 outline-none overflow-auto selection:bg-stone-200/50 dark:selection:bg-stone-700/50"
           placeholder="<p>Start writing HTML...</p>"
         ></textarea>
       </div>
