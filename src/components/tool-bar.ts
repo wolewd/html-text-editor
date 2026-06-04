@@ -111,7 +111,7 @@ export class ToolBar extends WolComponent {
       return b;
     };
 
-    // ── Undo / Redo ───────────────────────────────────────────────────────
+    // Undo / Redo
     const undoBtn = mkBtn("undo", "Undo (Ctrl+Z)", () => {
       saveHistory(getEditor()?.value ?? "");
       undoFromHistory();
@@ -128,7 +128,7 @@ export class ToolBar extends WolComponent {
     row.appendChild(redoBtn);
     row.appendChild(sep());
 
-    // ── Inline formats ────────────────────────────────────────────────────
+    // Inline formats
     row.appendChild(mkBtn("bold",          "Bold (Ctrl+B)",           () => { saveHistory(getEditor()?.value ?? ""); insertInline("<strong>", "</strong>"); }));
     row.appendChild(mkBtn("italic",        "Italic (Ctrl+I)",         () => { saveHistory(getEditor()?.value ?? ""); insertInline("<em>",     "</em>");     }));
     row.appendChild(mkBtn("underline",     "Underline (Ctrl+U)",      () => { saveHistory(getEditor()?.value ?? ""); insertInline("<u>",      "</u>");      }));
@@ -137,7 +137,7 @@ export class ToolBar extends WolComponent {
     row.appendChild(mkBtn("sup",           "Superscript",              () => { saveHistory(getEditor()?.value ?? ""); insertInline("<sup>",    "</sup>");    }));
     row.appendChild(sep());
 
-    // ── Block buttons ─────────────────────────────────────────────────────
+    // Block buttons
     const blockLabels: [string, string][] = [
       ["p",  "P"],
       ["h1", "H1"],
@@ -170,7 +170,7 @@ export class ToolBar extends WolComponent {
     }
     row.appendChild(sep());
 
-    // ── Lists ─────────────────────────────────────────────────────────────
+    // Lists
     row.appendChild(mkBtn("ul", "Unordered list", () => { saveHistory(getEditor()?.value ?? ""); wrapList("ul"); }));
     row.appendChild(mkBtn("ol", "Ordered list",   () => { saveHistory(getEditor()?.value ?? ""); wrapList("ol"); }));
     row.appendChild(sep());
@@ -199,7 +199,7 @@ export class ToolBar extends WolComponent {
     row.appendChild(mkBtn("eye", "Toggle preview", () => { togglePreview(); }));
     this._eyeBtn = row.lastElementChild as HTMLButtonElement;
 
-    // ── Spacer ────────────────────────────────────────────────────────────
+    // Spacer
     const spacer = document.createElement("div");
     spacer.className = "flex-1";
     row.appendChild(spacer);

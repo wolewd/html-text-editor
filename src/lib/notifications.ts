@@ -1,7 +1,3 @@
-/**
- * Minimal floating hint — appears near the target element, auto-dismisses.
- */
-
 let _timer: ReturnType<typeof setTimeout> | null = null;
 let _el: HTMLDivElement | null = null;
 

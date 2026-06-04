@@ -1,15 +1,10 @@
-/**
- * Tag insertion helpers for the code-editor textarea.
- * These are called by the toolbar to insert HTML tags at the cursor position.
- */
-
 const EDITOR_ID = "wol-code-editor";
 
 export function getEditor(): HTMLTextAreaElement {
   return document.getElementById(EDITOR_ID) as HTMLTextAreaElement;
 }
 
-/** Wrap the current selection (or insert empty tags at cursor) */
+// Wrap the current selection (or insert empty tags at cursor)
 export function insertInline(openTag: string, closeTag: string): void {
   const ta = getEditor();
   if (!ta) return;
@@ -28,8 +23,8 @@ export function insertInline(openTag: string, closeTag: string): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Wrap the current line(s) in block-level tags.
- * If already inside a heading, replaces the tag instead. */
+// Wrap the current line(s) in block-level tags.
+// If already inside a heading, replaces the tag instead.
 export function wrapBlock(tag: string): void {
   const ta = getEditor();
   if (!ta) return;
@@ -38,21 +33,21 @@ export function wrapBlock(tag: string): void {
   const pos = ta.selectionStart;
   const text = ta.value;
 
-  // ── Check if we're inside an existing heading ─────────────────────────
+  // Check if we're inside an existing heading
   const heading = findEnclosingHeading(text, pos);
   if (heading) {
     replaceHeading(ta, text, heading, tag);
     return;
   }
 
-  // ── Check if cursor is inside a <p> tag ──────────────────────────────
+  // Check if cursor is inside a <p> tag
   const pTag = findEnclosingTag(text, pos, "p");
   if (pTag) {
     replaceHeading(ta, text, pTag, tag);
     return;
   }
 
-  // ── Check if the current line is already a block tag (<p> or heading) ─
+  // Check if the current line is already a block tag like <p> or other heading
   const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
   const lineEnd = text.indexOf("\n", pos);
   const lineContent = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd);
@@ -70,7 +65,7 @@ export function wrapBlock(tag: string): void {
     return;
   }
 
-  // ── Not inside a heading — wrap current line ──────────────────────────
+  // Not inside a heading, wrap current line
   const start = ta.selectionStart;
   const end = ta.selectionEnd;
   const lineEndIdx = text.indexOf("\n", end);
@@ -97,7 +92,7 @@ function replaceHeading(ta: HTMLTextAreaElement, text: string, heading: { openSt
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Find the enclosing heading around `pos`, or null */
+// Find the enclosing heading around `pos`, or null
 function findEnclosingHeading(text: string, pos: number): { openStart: number; openEnd: number; closeStart: number; closeEnd: number } | null {
   const before = text.substring(0, pos);
   const after = text.substring(pos);
@@ -110,7 +105,7 @@ function findEnclosingHeading(text: string, pos: number): { openStart: number; o
   return findEnclosingTag(text, pos, tag);
 }
 
-/** Find enclosing <tag>...</tag> around `pos`, or null */
+// Find enclosing <tag>...</tag> around `pos`, or null
 function findEnclosingTag(text: string, pos: number, tag: string): { openStart: number; openEnd: number; closeStart: number; closeEnd: number } | null {
   const before = text.substring(0, pos);
   const after = text.substring(pos);
@@ -130,8 +125,8 @@ function findEnclosingTag(text: string, pos: number, tag: string): { openStart: 
   return { openStart, openEnd, closeStart: pos + closeStart, closeEnd };
 }
 
-/** Wrap selected lines in a list (<ul> or <ol>).
- * If cursor is already inside a list item, appends a new <li> instead. */
+// Wrap selected lines in a list (<ul> or <ol>).
+// If cursor is already inside a list item, appends a new <li> instead.
 export function wrapList(tag: "ul" | "ol"): void {
   const ta = getEditor();
   if (!ta) return;
@@ -140,7 +135,7 @@ export function wrapList(tag: "ul" | "ol"): void {
   const pos = ta.selectionStart;
   const text = ta.value;
 
-  // ── Check if we're inside an existing <li> ────────────────────────────
+  // Check if we're inside an existing <li>
   const before = text.substring(0, pos);
   const after = text.substring(pos);
 
@@ -152,7 +147,7 @@ export function wrapList(tag: "ul" | "ol"): void {
     const listOpen = lastIndexOfUnclosed(beforeLi, "<ul>", "</ul>") !== -1 ||
                      lastIndexOfUnclosed(beforeLi, "<ol>", "</ol>") !== -1;
     if (listOpen) {
-      // We're inside a list item — find its closing </li> and append a new one
+      // We're inside a list item, find its closing </li> and append a new one
       const liClose = after.indexOf("</li>");
       const insertPos = liClose === -1 ? pos + after.length : pos + liClose + 5;
       const indent = "  ";
@@ -166,7 +161,7 @@ export function wrapList(tag: "ul" | "ol"): void {
     }
   }
 
-  // ── Not inside a list — original wrap behavior ───────────────────────
+  // Not inside a list — original wrap behavior
   const start = ta.selectionStart;
   const end = ta.selectionEnd;
   const lineStart = text.lastIndexOf("\n", start - 1) + 1;
@@ -193,7 +188,7 @@ export function wrapList(tag: "ul" | "ol"): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Find the last occurrence of `open` before the string end that hasn't been closed by `close` */
+// Find the last occurrence of `open` before the string end that hasn't been closed by `close`
 function lastIndexOfUnclosed(haystack: string, open: string, close: string): number {
   let depth = 0;
   let i = haystack.length;
@@ -214,7 +209,7 @@ function lastIndexOfUnclosed(haystack: string, open: string, close: string): num
   return -1;
 }
 
-/** Insert a horizontal rule on its own line at the cursor */
+// Insert a horizontal rule on its own line at the cursor
 export function insertHr(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -243,7 +238,7 @@ export function insertHr(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a line break at the cursor */
+// Insert a line break at the cursor
 export function insertBr(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -258,7 +253,7 @@ export function insertBr(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a new table at the cursor. Does nothing if already inside a table. */
+// Insert a new table at the cursor. Does nothing if already inside a table.
 export function insertTable(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -291,7 +286,7 @@ export function insertTable(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Add a row to the enclosing table */
+// Add a row to the enclosing table
 export function insertTableRow(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -319,7 +314,7 @@ export function insertTableRow(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Add a column to the enclosing table (inserts <th>/<td> before each </tr>) */
+// Add a column to the enclosing table, inserts <th>/<td> before each </tr>
 export function insertTableColumn(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -358,7 +353,7 @@ export function insertTableColumn(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a code block at the cursor. Wraps selection if any. */
+// Insert a code block at the cursor. Wraps selection if any.
 export function insertCodeBlock(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -377,7 +372,7 @@ export function insertCodeBlock(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a link — wraps selection or inserts placeholder */
+// Insert a link — wraps selection or inserts placeholder
 export function insertLink(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -396,7 +391,7 @@ export function insertLink(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert an image */
+// Insert an image
 export function insertImage(): void {
   const ta = getEditor();
   if (!ta) return;
@@ -412,7 +407,7 @@ export function insertImage(): void {
   ta.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-/** Insert a video */
+// Insert a video
 export function insertVideo(): void {
   const ta = getEditor();
   if (!ta) return;

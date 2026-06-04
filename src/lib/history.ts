@@ -1,7 +1,3 @@
-/**
- * Undo / redo — stores textarea value snapshots.
- */
-
 const MAX = 100;
 
 let stack: string[] = [];
@@ -33,7 +29,7 @@ export function redo(): string | null {
 export function canUndo() { return index > 0; }
 export function canRedo() { return index < stack.length - 1; }
 
-/** Clear history and seed with an initial value */
+// Clear history and seed with an initial value
 export function reset(initialValue: string) {
   stack = [initialValue];
   index = 0;
