@@ -47,7 +47,7 @@ export class TitleBar extends WolComponent {
     return html`
       <header class="flex items-center justify-between px-5 h-13 shrink-0 border-b border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 select-none">
         <span class="font-mono font-semibold text-sm text-stone-800 dark:text-stone-200">
-          <span class="text-stone-400 dark:text-stone-500">~/</span>wolfe editor
+          <span class="text-stone-400 dark:text-stone-500">~/</span>wolfe
         </span>
         <button
           @mousedown=${(e: Event) => { e.preventDefault(); toggleTheme(); document.dispatchEvent(new CustomEvent("wolfe:theme-toggle")); }}

@@ -9,6 +9,6 @@ class AppRoot extends WolComponent {
 }
 
 const outlet = document.getElementById("app")!;
-router.add({ path: "/", tag: "app-root", title: "WolFe Editor" });
-router.missing({ tag: "app-root", title: "WolFe Editor" });
-router.init({ outlet, appName: "WolFe Editor" });
+router.add({ path: "/", tag: "app-root", title: "Wolfe" });
+router.missing({ tag: "app-root", title: "Wolfe" });
+router.init({ outlet, appName: "HTML Editor" });
