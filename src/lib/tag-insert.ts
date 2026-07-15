@@ -362,7 +362,7 @@ export function insertCodeBlock(): void {
   const start = ta.selectionStart;
   const end = ta.selectionEnd;
   const selected = ta.value.substring(start, end);
-  const tpl = `<code><pre>\n${selected}\n</pre></code>`;
+  const tpl = `<pre><code>\n${selected}\n</code></pre>`;
 
   ta.setRangeText(tpl, start, end, "end");
   // Place cursor after the content
